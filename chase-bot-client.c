@@ -11,20 +11,6 @@ void new_player (player_t *player, char c){
     player->c = c;
 }
 
-void draw_player(WINDOW *win, player_t *player, int delete){
-    int ch;
-    if(delete){
-        ch = player->c;
-    }else{
-        ch = ' ';
-    }
-    int p_x = player->x;
-    int p_y = player->y;
-    wmove(win, p_y, p_x);
-    waddch(win,ch);
-    wrefresh(win);
-}
-
 void move_player (player_t * player, int direction){
     if (direction == KEY_UP){
         if (player->y  != 1){
