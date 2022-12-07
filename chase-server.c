@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <ncurses.h>
+#include <time.h>
 
 #include "chase.h"
 
 WINDOW * message_win;
+
 
 void new_player (player_t *player, char c){
     player->x = WINDOW_SIZE/2;
@@ -47,13 +49,40 @@ void move_player (player_t * player, int direction){
     }
 }
 
-player_t p1;
+void place_starting_prizes(prize_t * prizes){
+    for (int i=0; i<5; i++){
+        prizes[i].x = rand()%WINDOW_SIZE;
+        prizes[i].y = rand()%WINDOW_SIZE;
+        prizes[i].value = 1+rand()%5;
+    }
+    for (int i=5; i<10; i++){
+        prizes[i].x = 0;
+        prizes[i].y = 0;
+        prizes[i].value = 0;
+    }
+}
+
+void place_new_prize(prize_t * prizes){
+    for (int i=0; i<10; i++){
+        if (prizes[i].value = 0){
+            prizes[i].x = rand()%WINDOW_SIZE;
+            prizes[i].y = rand()%WINDOW_SIZE;
+            prizes[i].value = 1+rand()%5;
+            break;
+        }
+    }
+}
+
+player_t players[10];
+player_t bots[10];
+prize_t prizes[10];
 
 int main(){
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
     keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
+    srand(time(NULL));
 
     /* creates a window and draws a border */
     WINDOW * my_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);

@@ -19,7 +19,7 @@ typedef enum message_type{
     move_ball,  // Direction
     disconnect, // No information
     ball_information, // Char, position
-    field_status,  // No players[10] bots[10]
+    field_status,  // players[10] bots[10] prizes[10]
     health_0  // No info
 } message_type_t;
 
