@@ -32,5 +32,5 @@ typedef struct message{
     prize_t prizes[10];
 } message;
 
-
 void draw_player(WINDOW *win, player_t *player, int delete);
+void init_windows(WINDOW* my_win, WINDOW* message_win);

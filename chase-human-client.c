@@ -11,29 +11,6 @@ void new_player (player_t *player, char c){
     player->c = c;
 }
 
-
-void move_player (player_t * player, int direction){
-    if (direction == KEY_UP){
-        if (player->y  != 1){
-            player->y --;
-        }
-    }
-    if (direction == KEY_DOWN){
-        if (player->y  != WINDOW_SIZE-2){
-            player->y ++;
-        }
-    }
-    if (direction == KEY_LEFT){
-        if (player->x  != 1){
-            player->x --;
-        }
-    }
-    if (direction == KEY_RIGHT)
-        if (player->x  != WINDOW_SIZE-2){
-            player->x ++;
-    }
-}
-
 player_t p1;
 
 int main(){
