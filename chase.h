@@ -5,6 +5,9 @@ typedef struct player_t{
     int x, y;
     char c;
     unsigned int health;
+
+    struct sockaddr_un client_addr;
+    socklen_t client_addr_size;
 } player_t;
 
 typedef struct prize_t{
@@ -23,14 +26,14 @@ typedef enum message_type{
     health_0  // No info
 } message_type_t;
 
-typedef struct message{
+typedef struct message_t{
     message_type_t type;
     char c;
     direction_t direction;
     player_t players[10];
     player_t bots[10];
     prize_t prizes[10];
-} message;
+} message_t;
 
 
 void draw_player(WINDOW *win, player_t *player, int delete);
