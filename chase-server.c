@@ -128,6 +128,8 @@ int main(){
 
                 break;
             case MOVE_BALl:
+                for (p = players; p->client_addr.sun_path == client_addr.sun_path; p++); //encontra o primeiro player indefinido
+                move_player(p, incoming_msg.direction);
                 break;
             case DISCONNECT:
 
