@@ -1,3 +1,4 @@
+#include <ncurses.h>
 #define WINDOW_SIZE 20
 
 typedef struct player_t{
@@ -32,5 +33,4 @@ typedef struct message{
 } message;
 
 
-
-
+void draw_player(WINDOW *win, player_t *player, int delete);
