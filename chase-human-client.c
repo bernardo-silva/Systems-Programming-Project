@@ -3,40 +3,14 @@
 
 #include "chase.h"
 
-WINDOW * message_win;
-
 void new_player (player_t *player, char c){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
 }
 
-
-void move_player (player_t * player, int direction){
-    if (direction == KEY_UP){
-        if (player->y  != 1){
-            player->y --;
-        }
-    }
-    if (direction == KEY_DOWN){
-        if (player->y  != WINDOW_SIZE-2){
-            player->y ++;
-        }
-    }
-    if (direction == KEY_LEFT){
-        if (player->x  != 1){
-            player->x --;
-        }
-    }
-    if (direction == KEY_RIGHT)
-        if (player->x  != WINDOW_SIZE-2){
-            player->x ++;
-    }
-}
-
 direction_t key2dir( int key){
-    switch (key)
-    {
+    switch (key){
     case KEY_UP:
         return UP;
     case KEY_DOWN:
@@ -64,7 +38,7 @@ int main(){
     }  
     struct sockaddr_un local_client_addr;
     local_client_addr.sun_family = AF_UNIX;
-    sprintf(local_client_addr.sun_path,"%s_%d", SOCKET_NAME, getpid());
+    sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
 
     unlink(local_client_addr.sun_path);
     int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
@@ -75,7 +49,7 @@ int main(){
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, SOCKET_NAME);
+    strcpy(server_addr.sun_path, SERVER_SOCKET);
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
@@ -89,6 +63,7 @@ int main(){
     // keypad(my_win, true);
 
     /* creates a window and draws a border */
+    WINDOW * message_win;
     message_win = newwin(5, WINDOW_SIZE, WINDOW_SIZE, 0);
     box(message_win, 0 , 0);	
     wrefresh(message_win);
