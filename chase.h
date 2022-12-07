@@ -1,6 +1,8 @@
 #include <ncurses.h>
 #define WINDOW_SIZE 20
 
+#define SOCKET_NAME "/tmp/sock_chase_server"
+
 typedef struct player_t{
     int x, y;
     char c;
