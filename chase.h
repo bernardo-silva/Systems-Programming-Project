@@ -1,5 +1,13 @@
+#ifndef CHASE
+#define CHASE
+
 #include <ncurses.h>
+#include <sys/socket.h>
+// #include <unistd.h>
+#include <sys/un.h>
+
 #define WINDOW_SIZE 20
+#define SERVER_SOCKET "/tmp/server_socket"
 
 typedef struct player_t{
     int x, y;
@@ -18,12 +26,14 @@ typedef struct prize_t{
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;
 
 typedef enum message_type{
-    connect,    // No information
-    move_ball,  // Direction
-    disconnect, // No information
-    ball_information, // Char, position
-    field_status,  // players[10] bots[10] prizes[10]
-    health_0  // No info
+    // Client
+    CONNECT,    // No information
+    MOVE_BALl,  // Direction
+    DISCONNECT, // No information
+    // Server
+    BALL_INFORMATION, // Char, position
+    FIELD_STATUS,  // players[10] bots[10] prizes[10]
+    HEALTH_0  // No info
 } message_type_t;
 
 typedef struct message_t{
@@ -35,5 +45,6 @@ typedef struct message_t{
     prize_t prizes[10];
 } message_t;
 
-void draw_player(WINDOW *win, player_t *player, int delete);
+void draw_player(WINDOW *win, player_t *player, int clear_char);
 void init_windows(WINDOW* my_win, WINDOW* message_win);
+#endif

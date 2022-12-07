@@ -1,8 +1,8 @@
 #include "chase.h"
 
-void draw_player(WINDOW *win, player_t *player, int delete){
+void draw_player(WINDOW *win, player_t *player, int clear_char){
     int ch;
-    if(delete){
+    if(clear_char){
         ch = player->c;
     }else{
         ch = ' ';
