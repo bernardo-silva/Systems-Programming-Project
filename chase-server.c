@@ -73,22 +73,22 @@ int main(){
     int sock_fd;
     sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (sock_fd == -1){
-	    perror("socket: ");
+	    perror("Error creating socket");
 	    exit(-1);
     }
+
     struct sockaddr_un local_addr;
     local_addr.sun_family = AF_UNIX;
     strcpy(local_addr.sun_path, SERVER_SOCKET);
 
     unlink(SERVER_SOCKET);
-    int err = bind(sock_fd, 
-            (const struct sockaddr *)&local_addr, sizeof(local_addr));
+    int err = bind(sock_fd, (const struct sockaddr *)&local_addr,
+                   sizeof(local_addr));
     if(err == -1) {
-	    perror("bind");
+	    perror("Error binding socket");
 	    exit(-1);
     }
     ///////////////////////////////////////////////
-
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
     keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
@@ -122,17 +122,19 @@ int main(){
         switch (incoming_msg.type)
         {
             case CONNECT:
-                for (p = players; p->c == 0; p++); //encontra o primeiro player indefinido
+                for(p = players; p->c == 0; p++); //encontra o primeiro player indefinido
                 //TO DO: verificar limite jogadores
                 new_player(p, 'P', client_addr, client_addr_size); //define o player
-
                 break;
             case MOVE_BALl:
-                for (p = players; p->client_addr.sun_path == client_addr.sun_path; p++); //encontra o primeiro player indefinido
+                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++); //encontra o primeiro player indefinido
                 move_player(p, incoming_msg.direction);
+                draw_player(my_win, p, 1);
                 break;
             case DISCONNECT:
-
+                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
+                remove_player(p);
+                draw_player(my_win, p, 0);
                 break;
             default:
                 break;
