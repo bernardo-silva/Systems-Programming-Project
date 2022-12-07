@@ -5,18 +5,13 @@
 
 WINDOW * message_win;
 
-typedef struct player_position_t{
-    int x, y;
-    char c;
-} player_position_t;
-
-void new_player (player_position_t *player, char c){
+void new_player (player_t *player, char c){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
 }
 
-void draw_player(WINDOW *win, player_position_t *player, int delete){
+void draw_player(WINDOW *win, player_t *player, int delete){
     int ch;
     if(delete){
         ch = player->c;
@@ -30,7 +25,7 @@ void draw_player(WINDOW *win, player_position_t *player, int delete){
     wrefresh(win);
 }
 
-void move_player (player_position_t * player, int direction){
+void move_player (player_t * player, int direction){
     if (direction == KEY_UP){
         if (player->y  != 1){
             player->y --;
@@ -52,7 +47,7 @@ void move_player (player_position_t * player, int direction){
     }
 }
 
-player_position_t p1;
+player_t p1;
 
 int main(){
     initscr();              /* Start curses mode */
