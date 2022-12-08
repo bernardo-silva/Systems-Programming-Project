@@ -50,8 +50,8 @@ void initialize_prizes(prize_t * prizes){
         prizes[i].value = 1+rand()%5;
     }
     for (int i=5; i<10; i++){
-        prizes[i].x = 0;
-        prizes[i].y = 0;
+        // prizes[i].x = 0;
+        // prizes[i].y = 0;
         prizes[i].value = 0;
     }
 }
@@ -97,7 +97,6 @@ int main(){
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
-    /* creates a window and draws a border */
     WINDOW *my_win, *message_win;
     init_windows(&my_win, &message_win);
 
@@ -155,15 +154,11 @@ int main(){
             default:
                 break;
         }
-        // key = wgetch(my_win);		
-        // if (key == KEY_LEFT || key == KEY_RIGHT || key == KEY_UP || key == KEY_DOWN){
-        //     draw_player(my_win, &p1, false);
-        //     move_player (&p1, key);
-        //     draw_player(my_win, &p1, true);
-        // }
 
-        // mvwprintw(message_win, 1,1,"%c key pressed", key);
-        // wrefresh(message_win);	
+
+        
+        wrefresh(my_win);
+        wrefresh(message_win);	
     }
 
     exit(0);

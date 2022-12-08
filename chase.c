@@ -11,7 +11,7 @@ void draw_player(WINDOW *win, player_t *player, int clear_char){
     int p_y = player->y;
     wmove(win, p_y, p_x);
     waddch(win,ch);
-    wrefresh(win);
+    // wrefresh(win);
 }
 
 void init_windows(WINDOW** my_win, WINDOW** message_win){

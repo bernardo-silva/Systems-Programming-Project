@@ -64,10 +64,8 @@ int main(){
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
-    /* creates a window and draws a border */
     WINDOW *my_win, *message_win;
     init_windows(&my_win, &message_win);
-    /* creates a window and draws a border */
 
     ///////////////////////////////////////////////
     // CONNECTION
@@ -105,6 +103,10 @@ int main(){
         draw_board(my_win, players, bots,  prizes, true);
         memcpy(&players , &(msg.players), sizeof(msg.players));
         draw_board(my_win, players, bots,  prizes, false);
+
+        
+        wrefresh(my_win);
+        wrefresh(message_win);	
     }
 
     exit(0);
