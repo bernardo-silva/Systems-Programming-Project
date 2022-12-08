@@ -33,8 +33,6 @@ void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes,
     }
 }
 
-player_t ;
-
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -81,9 +79,12 @@ int main(){
 
     ///////////////////////////////////////////////
     // MAIN
-    player_t players[10];
+    player_t players[10]; 
     player_t bots[10];
     prize_t prizes[10];
+
+    initialize_players(players, 10);
+    initialize_players(bots, 10);
 
     int key = -1;
     while(key != 27 && key != 'q'){

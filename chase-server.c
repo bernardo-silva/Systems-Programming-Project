@@ -43,7 +43,7 @@ void move_player (player_t * player, direction_t direction){
     }
 }
 
-void place_starting_prizes(prize_t * prizes){
+void initialize_prizes(prize_t * prizes){
     for (int i=0; i<5; i++){
         prizes[i].x = rand()%WINDOW_SIZE;
         prizes[i].y = rand()%WINDOW_SIZE;
@@ -103,9 +103,12 @@ int main(){
 
     ///////////////////////////////////////////////
     // MAIN
-    player_t players[10];
+    player_t players[10]; 
     player_t bots[10];
     prize_t prizes[10];
+
+    initialize_players(players, 10);
+    initialize_players(bots, 10);
 
     message_t incoming_msg;
     message_t reply_msg;
@@ -136,8 +139,12 @@ int main(){
                 
                 reply_msg.type = FIELD_STATUS;
                 memcpy(&(reply_msg.players), &players, sizeof(players));
-                sendto(sock_fd, &reply_msg, sizeof(reply_msg), 0, 
-                    (const struct sockaddr *)&client_addr.sun_path, sizeof(client_addr.sun_path));
+                int err = sendto(sock_fd, &reply_msg, sizeof(reply_msg), 0, 
+                        (const struct sockaddr *)&client_addr, sizeof(client_addr));
+                if (err == -1){
+                    perror("Error: field status couldn't be sent");
+                    exit(-1);
+                }
 
                 break;
             case DISCONNECT:
