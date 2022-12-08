@@ -116,7 +116,7 @@ int main(){
     struct sockaddr_un client_addr;
     socklen_t client_addr_size = sizeof(struct sockaddr_un);
     
-    // int key = -1;
+    int counter=0;
     while(1){
         player_t *p;
 
@@ -129,23 +129,20 @@ int main(){
                 for(p = players; p->c != 0; p++); //encontra o primeiro player indefinido
                 //TO DO: verificar limite jogadores
                 new_player(p, 'A' + p - players, client_addr, client_addr_size); //define o player
-                // draw_player(main_win, p, FALSE);
-
                 msg_out.type = BALL_INFORMATION;
                 break;
+
             case MOVE_BALL:
                 for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
-                // draw_player(main_win, p, TRUE);
                 move_player(p, msg_in.direction);
-                // draw_player(main_win, p, FALSE);
-                
                 msg_out.type = FIELD_STATUS;
                 break;
+
             case DISCONNECT:
-                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
+                for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++);
                 remove_player(p);
-                // draw_player(main_win, p, 0);
                 break;
+
             default:
                 break;
         }
@@ -160,6 +157,9 @@ int main(){
         //     perror("Error: field status couldn't be sent");
         //     exit(-1);
         // }
+
+        mvwprintw(message_win, 1,1,"msg %d type %d to %c",
+                    counter++, msg_out.type, p->c);
 
         clear_board(main_win);
         draw_board(main_win, players, bots, prizes);

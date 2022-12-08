@@ -61,7 +61,7 @@ int main(){
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
-    keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
+    // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
 
     ///////////////////////////////////////////////
@@ -127,8 +127,8 @@ int main(){
 
         
         // message window
-        mvwprintw(message_win, 1,1,"You are %c\n%c key pressed",
-                    get_player_char(players,local_client_addr), key);
+        mvwprintw(message_win, 1,1,"%d\nYou are %c\n%c key pressed",
+                    msg_in.type, get_player_char(players,local_client_addr), key);
         wrefresh(message_win);
         
         // send msg to server
