@@ -48,4 +48,6 @@ typedef struct message_t{
 void draw_player(WINDOW *win, player_t *player, int clear_char);
 void init_windows(WINDOW** my_win, WINDOW** message_win);
 void initialize_players(player_t * players, int number);
+void clear_board(WINDOW* win);
+void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes);
 #endif

@@ -24,15 +24,6 @@ direction_t key2dir(int key){
     return -1;
 }
 
-void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes, int clear){
-    for(int i=0; i<10; i++){
-        if(players[i].c != 0)
-            draw_player(win, &players[i], clear);
-        if(bots[i].c != 0)
-            draw_player(win, &bots[i], clear);
-    }
-}
-
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -69,9 +60,10 @@ int main(){
 
     ///////////////////////////////////////////////
     // CONNECTION
-    message_t msg;
-    msg.type = CONNECT;
-    sendto(sock_fd, &msg, sizeof(msg), 0, 
+    message_t msg_in;
+    message_t msg_out;
+    msg_out.type = CONNECT;
+    sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
     // mvwprintw(message_win, 1,1,"connection request sent");
 
@@ -81,32 +73,46 @@ int main(){
     player_t bots[10];
     prize_t prizes[10];
 
-    initialize_players(players, 10);
-    initialize_players(bots, 10);
+    // initialize_players(players, 10);
+    // initialize_players(bots, 10);
 
     int key = -1;
     while(key != 27 && key != 'q'){
+        //receber mensagem do servidor
+        recv(sock_fd, &msg_in, sizeof(msg_in), 0);
+
+        switch (msg_in.type)
+        {
+        case BALL_INFORMATION:
+        case FIELD_STATUS:
+            memcpy(&players, &(msg_in.players), sizeof(msg_in.players));
+            memcpy(&bots,    &(msg_in.bots),    sizeof(msg_in.bots));
+            memcpy(&prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+            break;
+        
+        default:
+            perror("Error: unknown message type received");
+            exit(-1);
+        }
+
+        // atualizar janela
+        clear_board(my_win);
+        draw_board(my_win, players, bots, prizes);
+        wrefresh(my_win);
+        wrefresh(message_win);
+
+        //enviar 
         key = wgetch(my_win);
-        msg.direction = key2dir(key);
-
-
         mvwprintw(message_win, 1,1,"%c key pressed", key);
         wrefresh(message_win);
         
-        msg.type = MOVE_BALL;
-        sendto(sock_fd, &msg, sizeof(msg), 0, 
+        msg_out.type = MOVE_BALL;
+        msg_out.direction = key2dir(key);
+        
+        sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
 
-        //receber status e dar update
-        recv(sock_fd, &msg, sizeof(msg), 0);
-
-        draw_board(my_win, players, bots,  prizes, true);
-        memcpy(&players , &(msg.players), sizeof(msg.players));
-        draw_board(my_win, players, bots,  prizes, false);
-
-        
-        wrefresh(my_win);
-        wrefresh(message_win);	
+        		
     }
 
     exit(0);

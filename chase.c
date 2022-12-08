@@ -32,3 +32,29 @@ void initialize_players(player_t * players, int number){
         players[i].c = '\0';
     }
 }
+
+void clear_board(WINDOW* win){
+    for(int i=1; i<WINDOW_SIZE-1; i++){
+        for(int j=1; j<WINDOW_SIZE-1; j++){
+            wmove(win, i, j);
+            waddch(win,' ');  
+        }
+    }
+}
+
+void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes){
+    for(int i=0; i<10; i++){
+        if(players[i].c != 0){
+            wmove(win, players[i].y, players[i].x);
+            waddch(win, players[i].c);
+        }
+        if(bots[i].c != 0){
+            wmove(win, bots[i].y, bots[i].x);
+            waddch(win, bots[i].c);
+        }
+        if(prizes[i].value != 0){
+            wmove(win, prizes[i].y, prizes[i].x);
+            waddch(win, prizes[i].value + 48);
+        }
+    }
+}
