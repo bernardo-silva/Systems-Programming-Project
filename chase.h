@@ -3,7 +3,7 @@
 
 #include <ncurses.h>
 #include <sys/socket.h>
-// #include <unistd.h>
+#include <unistd.h>
 #include <sys/un.h>
 
 #define WINDOW_SIZE 20

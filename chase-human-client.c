@@ -9,16 +9,27 @@ void new_player (player_t *player, char c){
     player->c = c;
 }
 
-direction_t key2dir( int key){
+direction_t key2dir(int key){
     switch (key){
-    case KEY_UP:
-        return UP;
-    case KEY_DOWN:
-        return DOWN;
-    case KEY_LEFT:
-        return LEFT;
-    case KEY_RIGHT:
-        return RIGHT;
+        case KEY_UP:
+            return UP;
+        case KEY_DOWN:
+            return DOWN;
+        case KEY_LEFT:
+            return LEFT;
+        case KEY_RIGHT:
+            return RIGHT;
+    }
+    // Ver isto
+    return -1;
+}
+
+void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes, int clear){
+    for(int i=0; i<10; i++){
+        if(players[i].c != 0)
+            draw_player(win, &players[i], clear);
+        if(bots[i].c != 0)
+            draw_player(win, &bots[i], clear);
     }
 }
 
@@ -56,21 +67,9 @@ int main(){
     ///////////////////////////////////////////////
     // WINDOW CREATION
     /* creates a window and draws a border */
-    // WINDOW *my_win, *message_win;
-    // init_windows(my_win, message_win);
+    WINDOW *my_win, *message_win;
+    init_windows(&my_win, &message_win);
     /* creates a window and draws a border */
-
-    WINDOW * my_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
-    box(my_win, 0 , 0);	
-    wrefresh(my_win);
-    keypad(my_win, true);
-
-    /* creates a window and draws a border */
-    
-    WINDOW * message_win = newwin(5, WINDOW_SIZE, WINDOW_SIZE, 0);
-    box(message_win, 0 , 0);	
-    wrefresh(message_win);
-
 
     ///////////////////////////////////////////////
     // CONNECTION
@@ -91,6 +90,7 @@ int main(){
         key = wgetch(my_win);
         msg.direction = key2dir(key);
 
+
         mvwprintw(message_win, 1,1,"%c key pressed", key);
         wrefresh(message_win);
         
@@ -98,10 +98,12 @@ int main(){
         sendto(sock_fd, &msg, sizeof(msg), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
 
+        //receber status e dar update
         recv(sock_fd, &msg, sizeof(msg), 0);
-        
 
-
+        draw_board(my_win, players, bots,  prizes, true);
+        memcpy(&players , &(msg.players), sizeof(msg.players));
+        draw_board(my_win, players, bots,  prizes, false);
     }
 
     exit(0);

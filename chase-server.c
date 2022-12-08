@@ -116,25 +116,26 @@ int main(){
     // int key = -1;
     while(1){
         player_t *p;
+
         recvfrom(sock_fd, &incoming_msg, sizeof(incoming_msg), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
         
         switch (incoming_msg.type)
         {
             case CONNECT:
-                for(p = players; p->c == 0; p++); //encontra o primeiro player indefinido
+                for(p = players; p->c != 0; p++); //encontra o primeiro player indefinido
                 //TO DO: verificar limite jogadores
                 new_player(p, 'P', client_addr, client_addr_size); //define o player
+                draw_player(my_win, p, FALSE);
                 break;
             case MOVE_BALL:
-                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
+                for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
                 draw_player(my_win, p, TRUE);
                 move_player(p, incoming_msg.direction);
                 draw_player(my_win, p, FALSE);
-
                 
                 reply_msg.type = FIELD_STATUS;
-                reply_msg.players = players;
+                memcpy(&(reply_msg.players), &players, sizeof(players));
                 sendto(sock_fd, &reply_msg, sizeof(reply_msg), 0, 
                     (const struct sockaddr *)&client_addr.sun_path, sizeof(client_addr.sun_path));
 
