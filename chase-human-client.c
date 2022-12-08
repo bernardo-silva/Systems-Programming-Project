@@ -22,7 +22,7 @@ direction_t key2dir( int key){
     }
 }
 
-player_t p1;
+player_t ;
 
 int main(){
     ///////////////////////////////////////////////
@@ -81,23 +81,27 @@ int main(){
     // mvwprintw(message_win, 1,1,"connection request sent");
 
     ///////////////////////////////////////////////
-    // MAIN       
-    msg.type = MOVE_BALL;
-    int key = -1;
+    // MAIN
+    player_t players[10];
+    player_t bots[10];
+    prize_t prizes[10];
 
+    int key = -1;
     while(key != 27 && key != 'q'){
         key = wgetch(my_win);
         msg.direction = key2dir(key);
-        // if (key == KEY_LEFT || key == KEY_RIGHT || key == KEY_UP || key == KEY_DOWN){
-        //     draw_player(my_win, &p1, false);
-        //     move_player (&p1, key);
-        //     draw_player(my_win, &p1, true);
-        // }
 
         mvwprintw(message_win, 1,1,"%c key pressed", key);
         wrefresh(message_win);
+        
+        msg.type = MOVE_BALL;
         sendto(sock_fd, &msg, sizeof(msg), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
+
+        recv(sock_fd, &msg, sizeof(msg), 0);
+        
+
+
     }
 
     exit(0);
