@@ -73,8 +73,8 @@ int main(){
     int sock_fd;
     sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (sock_fd == -1){
-	    perror("Error creating socket");
-	    exit(-1);
+        perror("Error creating socket");
+        exit(-1);
     }
 
     struct sockaddr_un local_addr;
@@ -85,8 +85,8 @@ int main(){
     int err = bind(sock_fd, (const struct sockaddr *)&local_addr,
                    sizeof(local_addr));
     if(err == -1) {
-	    perror("Error binding socket");
-	    exit(-1);
+        perror("Error binding socket");
+        exit(-1);
     }
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
