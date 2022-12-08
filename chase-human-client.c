@@ -19,9 +19,10 @@ direction_t key2dir(int key){
             return LEFT;
         case KEY_RIGHT:
             return RIGHT;
+
+        default:
+            return -1;
     }
-    // Ver isto
-    return -1;
 }
 
 int main(){
@@ -95,25 +96,35 @@ int main(){
             exit(-1);
         }
 
-        // atualizar janela
+        // update window
         clear_board(my_win);
         draw_board(my_win, players, bots, prizes);
         wrefresh(my_win);
         wrefresh(message_win);
 
-        //enviar 
-        key = wgetch(my_win);
+        // read keypress
+        bool invalid_key = true;
+        while (invalid_key){
+            key = wgetch(my_win);
+            if (key == 27 || key == 'q'){
+                msg_out.type = DISCONNECT;
+                invalid_key = false;
+            }
+            else if ( (msg_out.direction = key2dir(key)) != -1){
+                msg_out.type = MOVE_BALL;
+                invalid_key = false;
+            }
+        }
+
         mvwprintw(message_win, 1,1,"%c key pressed", key);
         wrefresh(message_win);
-        
-        msg_out.type = MOVE_BALL;
-        msg_out.direction = key2dir(key);
         
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
 
         		
     }
-
+    
+    endwin();
     exit(0);
 }

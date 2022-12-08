@@ -17,7 +17,7 @@ void new_player (player_t *player, char c, struct sockaddr_un client_addr, sockl
 void remove_player (player_t *player){
     player->x = -1;
     player->y = -1;
-    player->c = 0;
+    player->c = '\0';
     // player->client_addr = {NULL, NULL};
     // player->client_addr_size = NULL;
 }
@@ -156,10 +156,10 @@ int main(){
 
         int err = sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
-        if (err == -1){
-            perror("Error: field status couldn't be sent");
-            exit(-1);
-        }
+        // if (err == -1){
+        //     perror("Error: field status couldn't be sent");
+        //     exit(-1);
+        // }
 
         clear_board(my_win);
         draw_board(my_win, players, bots, prizes);
@@ -167,5 +167,6 @@ int main(){
         wrefresh(message_win);	
     }
 
+    endwin();
     exit(0);
 }
