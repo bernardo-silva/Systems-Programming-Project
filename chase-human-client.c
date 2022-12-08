@@ -40,8 +40,8 @@ int main(){
     int sock_fd;
     sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (sock_fd == -1){
-	    perror("socket: ");
-	    exit(-1);
+        perror("Error creating socket");
+        exit(-1);
     }  
     struct sockaddr_un local_client_addr;
     local_client_addr.sun_family = AF_UNIX;
@@ -50,13 +50,14 @@ int main(){
     unlink(local_client_addr.sun_path);
     int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
     if(err == -1) {
-        perror("bind");
+        perror("Error binding socket");
         exit(-1);
     }
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
     strcpy(server_addr.sun_path, SERVER_SOCKET);
+    
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
@@ -93,16 +94,15 @@ int main(){
 
         switch (msg_in.type)
         {
-        case BALL_INFORMATION:
-        case FIELD_STATUS:
-            memcpy(&players, &(msg_in.players), sizeof(msg_in.players));
-            memcpy(&bots,    &(msg_in.bots),    sizeof(msg_in.bots));
-            memcpy(&prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
-            break;
-        
-        default:
-            perror("Error: unknown message type received");
-            exit(-1);
+            case BALL_INFORMATION:
+            case FIELD_STATUS:
+                memcpy(&players, &(msg_in.players), sizeof(msg_in.players));
+                memcpy(&bots,    &(msg_in.bots),    sizeof(msg_in.bots));
+                memcpy(&prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+                break;
+            default:
+                perror("Error: unknown message type received");
+                exit(-1);
         }
 
         // update main window
@@ -119,7 +119,7 @@ int main(){
                 msg_out.type = DISCONNECT;
                 invalid_key = false;
             }
-            else if ( (msg_out.direction = key2dir(key)) != -1){
+            else if ((msg_out.direction = key2dir(key)) != -1){
                 msg_out.type = MOVE_BALL;
                 invalid_key = false;
             }
@@ -134,8 +134,6 @@ int main(){
         // send msg to server
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
-
-        		
     }
 
     endwin();
