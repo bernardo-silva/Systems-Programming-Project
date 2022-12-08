@@ -28,7 +28,7 @@ typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;
 typedef enum message_type{
     // Client
     CONNECT,    // No information
-    MOVE_BALl,  // Direction
+    MOVE_BALL,  // Direction
     DISCONNECT, // No information
     // Server
     BALL_INFORMATION, // Char, position
@@ -46,5 +46,5 @@ typedef struct message_t{
 } message_t;
 
 void draw_player(WINDOW *win, player_t *player, int clear_char);
-void init_windows(WINDOW* my_win, WINDOW* message_win);
+void init_windows(WINDOW** my_win, WINDOW** message_win);
 #endif

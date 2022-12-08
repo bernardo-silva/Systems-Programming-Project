@@ -22,21 +22,21 @@ void remove_player (player_t *player){
     // player->client_addr_size = NULL;
 }
 
-void move_player (player_t * player, int direction){
+void move_player (player_t * player, direction_t direction){
     switch (direction) {
-        case KEY_UP:
+        case UP:
             if (player->y != 1)
                 player->y--;
             break;
-        case KEY_DOWN:
+        case DOWN:
             if (player->y != WINDOW_SIZE-2)
                 player->y++;
             break;
-        case KEY_LEFT:
+        case LEFT:
             if (player->x != 1)
                 player->x--;
             break;
-        case KEY_RIGHT:
+        case RIGHT:
             if (player->x != WINDOW_SIZE-2)
                 player->x++;
             break;
@@ -99,7 +99,7 @@ int main(){
     // WINDOW CREATION
     /* creates a window and draws a border */
     WINDOW *my_win, *message_win;
-    init_windows(my_win, message_win);
+    init_windows(&my_win, &message_win);
 
     ///////////////////////////////////////////////
     // MAIN
@@ -126,10 +126,11 @@ int main(){
                 //TO DO: verificar limite jogadores
                 new_player(p, 'P', client_addr, client_addr_size); //define o player
                 break;
-            case MOVE_BALl:
+            case MOVE_BALL:
                 for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++); //encontra o primeiro player indefinido
+                draw_player(my_win, p, TRUE);
                 move_player(p, incoming_msg.direction);
-                draw_player(my_win, p, 1);
+                draw_player(my_win, p, FALSE);
                 break;
             case DISCONNECT:
                 for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
