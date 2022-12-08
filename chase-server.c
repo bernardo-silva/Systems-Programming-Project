@@ -117,7 +117,7 @@ int main(){
     while(1){
         player_t *p;
         recvfrom(sock_fd, &incoming_msg, sizeof(incoming_msg), 0, 
-                        (struct sockaddr *)&client_addr, &client_addr_size);
+            (struct sockaddr *)&client_addr, &client_addr_size);
         
         switch (incoming_msg.type)
         {
@@ -127,10 +127,17 @@ int main(){
                 new_player(p, 'P', client_addr, client_addr_size); //define o player
                 break;
             case MOVE_BALL:
-                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++); //encontra o primeiro player indefinido
+                for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
                 draw_player(my_win, p, TRUE);
                 move_player(p, incoming_msg.direction);
                 draw_player(my_win, p, FALSE);
+
+                
+                reply_msg.type = FIELD_STATUS;
+                reply_msg.players = players;
+                sendto(sock_fd, &reply_msg, sizeof(reply_msg), 0, 
+                    (const struct sockaddr *)&client_addr.sun_path, sizeof(client_addr.sun_path));
+
                 break;
             case DISCONNECT:
                 for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
