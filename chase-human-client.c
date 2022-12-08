@@ -25,6 +25,15 @@ direction_t key2dir(int key){
     }
 }
 
+char get_player_char(player_t * players, struct sockaddr_un my_address){
+    for(int i=0; i<10; i++){
+        if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
+            return players[i].c;
+    }
+
+    return '\0';
+}
+
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -56,8 +65,8 @@ int main(){
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
-    WINDOW *my_win, *message_win;
-    init_windows(&my_win, &message_win);
+    WINDOW *main_win, *message_win;
+    init_windows(&main_win, &message_win);
 
     ///////////////////////////////////////////////
     // CONNECTION
@@ -96,16 +105,16 @@ int main(){
             exit(-1);
         }
 
-        // update window
-        clear_board(my_win);
-        draw_board(my_win, players, bots, prizes);
-        wrefresh(my_win);
+        // update main window
+        clear_board(main_win);
+        draw_board(main_win, players, bots, prizes);
+        wrefresh(main_win);
         wrefresh(message_win);
 
         // read keypress
         bool invalid_key = true;
         while (invalid_key){
-            key = wgetch(my_win);
+            key = wgetch(main_win);
             if (key == 27 || key == 'q'){
                 msg_out.type = DISCONNECT;
                 invalid_key = false;
@@ -116,15 +125,19 @@ int main(){
             }
         }
 
-        mvwprintw(message_win, 1,1,"%c key pressed", key);
+        
+        // message window
+        mvwprintw(message_win, 1,1,"You are %c\n%c key pressed",
+                    get_player_char(players,local_client_addr), key);
         wrefresh(message_win);
         
+        // send msg to server
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
 
         		
     }
-    
+
     endwin();
     exit(0);
 }

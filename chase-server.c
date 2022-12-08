@@ -97,8 +97,8 @@ int main(){
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
-    WINDOW *my_win, *message_win;
-    init_windows(&my_win, &message_win);
+    WINDOW *main_win, *message_win;
+    init_windows(&main_win, &message_win);
 
     ///////////////////////////////////////////////
     // MAIN
@@ -129,22 +129,22 @@ int main(){
                 for(p = players; p->c != 0; p++); //encontra o primeiro player indefinido
                 //TO DO: verificar limite jogadores
                 new_player(p, 'A' + p - players, client_addr, client_addr_size); //define o player
-                // draw_player(my_win, p, FALSE);
+                // draw_player(main_win, p, FALSE);
 
                 msg_out.type = BALL_INFORMATION;
                 break;
             case MOVE_BALL:
                 for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
-                // draw_player(my_win, p, TRUE);
+                // draw_player(main_win, p, TRUE);
                 move_player(p, msg_in.direction);
-                // draw_player(my_win, p, FALSE);
+                // draw_player(main_win, p, FALSE);
                 
                 msg_out.type = FIELD_STATUS;
                 break;
             case DISCONNECT:
                 for(p = players; p->client_addr.sun_path == client_addr.sun_path; p++);
                 remove_player(p);
-                // draw_player(my_win, p, 0);
+                // draw_player(main_win, p, 0);
                 break;
             default:
                 break;
@@ -161,9 +161,9 @@ int main(){
         //     exit(-1);
         // }
 
-        clear_board(my_win);
-        draw_board(my_win, players, bots, prizes);
-        wrefresh(my_win);
+        clear_board(main_win);
+        draw_board(main_win, players, bots, prizes);
+        wrefresh(main_win);
         wrefresh(message_win);	
     }
 
