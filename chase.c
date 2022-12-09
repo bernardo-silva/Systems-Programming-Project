@@ -42,19 +42,19 @@ void clear_board(WINDOW* win){
     }
 }
 
-void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes){
+void draw_board(WINDOW* win, game_t* game){
     for(int i=0; i<10; i++){
-        if(players[i].c != 0){
-            wmove(win, players[i].y, players[i].x);
-            waddch(win, players[i].c);
+        if(game->players[i].c != 0){
+            wmove(win, game->players[i].y, game->players[i].x);
+            waddch(win, game->players[i].c);
         }
-        if(bots[i].c != 0){
-            wmove(win, bots[i].y, bots[i].x);
-            waddch(win, bots[i].c);
+        if(game->bots[i].c != 0){
+            wmove(win, game->bots[i].y, game->bots[i].x);
+            waddch(win, game->bots[i].c);
         }
-        if(prizes[i].value != 0){
-            wmove(win, prizes[i].y, prizes[i].x);
-            waddch(win, prizes[i].value + 48);
+        if(game->prizes[i].value != 0){
+            wmove(win, game->prizes[i].y, game->prizes[i].x);
+            waddch(win, game->prizes[i].value + 48);
         }
     }
 }

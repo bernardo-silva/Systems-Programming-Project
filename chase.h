@@ -8,7 +8,7 @@
 
 #define WINDOW_SIZE 20
 #define SERVER_SOCKET "/tmp/server_socket"
-
+#define MIN(a,b) ((a>b)?b:a)
 typedef struct player_t{
     int x, y;
     char c;
@@ -22,6 +22,12 @@ typedef struct prize_t{
     int x, y;
     unsigned int value;
 } prize_t;
+
+typedef struct game_t{
+    player_t players[10]; 
+    player_t bots[10];
+    prize_t prizes[10];
+} game_t;
 
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;
 
@@ -49,5 +55,5 @@ void draw_player(WINDOW *win, player_t *player, int clear_char);
 void init_windows(WINDOW** my_win, WINDOW** message_win);
 void initialize_players(player_t * players, int number);
 void clear_board(WINDOW* win);
-void draw_board(WINDOW* win, player_t* players, player_t* bots, prize_t* prizes);
+void draw_board(WINDOW* win, game_t* game);
 #endif

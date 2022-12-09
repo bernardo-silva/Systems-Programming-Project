@@ -5,8 +5,6 @@
 
 #include "chase.h"
 
-
-
 void new_player (player_t *player, char c, struct sockaddr_un client_addr, socklen_t client_addr_size){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
@@ -21,7 +19,28 @@ void remove_player (player_t *player){
     // player->client_addr = {NULL, NULL};
     // player->client_addr_size = NULL;
 }
-
+void initialize_prizes(prize_t * prizes){
+    for (int i=0; i<5; i++){
+        prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
+        prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
+        prizes[i].value = 1+rand()%5;
+    }
+    for (int i=5; i<10; i++){
+        // prizes[i].x = 0;
+        // prizes[i].y = 0;
+        prizes[i].value = 0;
+    }
+}
+void place_new_prize(prize_t * prizes){
+    for (int i=0; i<10; i++){
+        if (prizes[i].value == 0){
+            prizes[i].x = rand()%WINDOW_SIZE;
+            prizes[i].y = rand()%WINDOW_SIZE;
+            prizes[i].value = 1+rand()%5;
+            break;
+        }
+    }
+}
 void move_player (player_t * player, direction_t direction){
     switch (direction) {
         case UP:
@@ -42,27 +61,29 @@ void move_player (player_t * player, direction_t direction){
             break;
     }
 }
-
-void initialize_prizes(prize_t * prizes){
-    for (int i=0; i<5; i++){
-        prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].value = 1+rand()%5;
-    }
-    for (int i=5; i<10; i++){
-        // prizes[i].x = 0;
-        // prizes[i].y = 0;
-        prizes[i].value = 0;
-    }
-}
-
-void place_new_prize(prize_t * prizes){
-    for (int i=0; i<10; i++){
-        if (prizes[i].value == 0){
-            prizes[i].x = rand()%WINDOW_SIZE;
-            prizes[i].y = rand()%WINDOW_SIZE;
-            prizes[i].value = 1+rand()%5;
-            break;
+void check_collision(player_t* p, game_t* game, int is_bot){
+    for(int i = 0; i < 10; i++){
+        //Check prize
+        prize_t prize = game->prizes[i];
+        if(prize.value && prize.x == p->x && prize.y == p->y){
+            p->health = MIN(p->health+prize.value, 10);
+            game->prizes[i].value = 0;
+            return;
+        }
+        //Check player
+        player_t* p2 = game->players + i;
+        if(p!=p2 && p2->c != 0 && p->x == p2->x && p->y == p2->y){
+                p2->health--;
+                if(!is_bot) p->health++; // Only increase player's health
+            //CHECK IF PLAYER DIED HERE?
+        }
+        //Check bot
+        if(is_bot) continue; //Ignore collisions between bots
+        player_t* bot = game->bots + i;
+        if(bot->c != 0 && p->x == bot->x && p->y == bot->y){
+                p->health++;
+                p2->health--;
+            //CHECK IF PLAYER DIED HERE?
         }
     }
 }
@@ -102,13 +123,11 @@ int main(){
 
     ///////////////////////////////////////////////
     // MAIN
-    player_t players[10]; 
-    player_t bots[10];
-    prize_t prizes[10];
+    game_t game;
 
-    initialize_players(players, 10);
-    initialize_players(bots, 10);
-    initialize_prizes(prizes);
+    initialize_players(game.players, 10);
+    initialize_players(game.bots, 10);
+    initialize_prizes(game.prizes);
 
     message_t msg_in;
     message_t msg_out;
@@ -126,20 +145,21 @@ int main(){
         switch (msg_in.type)
         {
             case CONNECT:
-                for(p = players; p->c != 0; p++); //encontra o primeiro player indefinido
+                for(p = game.players; p->c != 0; p++); //encontra o primeiro player indefinido
                 //TO DO: verificar limite jogadores
-                new_player(p, 'A' + p - players, client_addr, client_addr_size); //define o player
+                new_player(p, 'A' + p - game.players, client_addr, client_addr_size); //define o player
                 msg_out.type = BALL_INFORMATION;
                 break;
 
             case MOVE_BALL:
-                for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
+                for(p = game.players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
                 move_player(p, msg_in.direction);
+                check_collision(p, &game, p->c=='*'); //CORRECT WAY OF CHECKING IF IS BOT?
                 msg_out.type = FIELD_STATUS;
                 break;
 
             case DISCONNECT:
-                for(p = players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++);
+                for(p = game.players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++);
                 remove_player(p);
                 break;
 
@@ -147,9 +167,9 @@ int main(){
                 break;
         }
 
-        memcpy(&(msg_out.players), &players, sizeof(players));
-        memcpy(&(msg_out.bots),    &bots,    sizeof(bots));
-        memcpy(&(msg_out.prizes),  &prizes,  sizeof(prizes));
+        memcpy(&(msg_out.players), &game.players, sizeof(game.players));
+        memcpy(&(msg_out.bots),    &game.bots,    sizeof(game.bots));
+        memcpy(&(msg_out.prizes),  &game.prizes,  sizeof(game.prizes));
 
         int err = sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
@@ -162,7 +182,7 @@ int main(){
                     counter++, msg_out.type, p->c);
 
         clear_board(main_win);
-        draw_board(main_win, players, bots, prizes);
+        draw_board(main_win, &game);
         wrefresh(main_win);
         wrefresh(message_win);	
     }

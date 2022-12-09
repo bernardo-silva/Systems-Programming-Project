@@ -80,9 +80,7 @@ int main(){
 
     ///////////////////////////////////////////////
     // MAIN
-    player_t players[10]; 
-    player_t bots[10];
-    prize_t prizes[10];
+    game_t game;
 
     // initialize_players(players, 10);
     // initialize_players(bots, 10);
@@ -96,9 +94,9 @@ int main(){
         {
             case BALL_INFORMATION:
             case FIELD_STATUS:
-                memcpy(&players, &(msg_in.players), sizeof(msg_in.players));
-                memcpy(&bots,    &(msg_in.bots),    sizeof(msg_in.bots));
-                memcpy(&prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+                memcpy(&game.players, &(msg_in.players), sizeof(msg_in.players));
+                memcpy(&game.bots,    &(msg_in.bots),    sizeof(msg_in.bots));
+                memcpy(&game.prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
                 break;
             default:
                 perror("Error: unknown message type received");
@@ -107,7 +105,7 @@ int main(){
 
         // update main window
         clear_board(main_win);
-        draw_board(main_win, players, bots, prizes);
+        draw_board(main_win, &game);
         wrefresh(main_win);
         wrefresh(message_win);
 
@@ -128,7 +126,7 @@ int main(){
         
         // message window
         mvwprintw(message_win, 1,1,"%d\nYou are %c\n%c key pressed",
-                    msg_in.type, get_player_char(players,local_client_addr), key);
+                    msg_in.type, get_player_char(game.players,local_client_addr), key);
         wrefresh(message_win);
         
         // send msg to server
