@@ -34,8 +34,8 @@ void initialize_prizes(prize_t * prizes){
 void place_new_prize(prize_t * prizes){
     for (int i=0; i<10; i++){
         if (prizes[i].value == 0){
-            prizes[i].x = rand()%WINDOW_SIZE;
-            prizes[i].y = rand()%WINDOW_SIZE;
+            prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
+            prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
             prizes[i].value = 1+rand()%5;
             break;
         }
@@ -143,8 +143,18 @@ int main(){
     socklen_t client_addr_size = sizeof(struct sockaddr_un);
     
     int counter=0;
+    time_t last_prize, next_prize;
+    time(&last_prize);
+
     while(1){
         player_t *p;
+    
+        time(&next_prize);
+
+        if(difftime(next_prize, last_prize) >= 5){
+            place_new_prize(game.prizes);
+            time(&last_prize);
+        }
 
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
