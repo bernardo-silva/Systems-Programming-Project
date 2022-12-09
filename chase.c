@@ -22,7 +22,7 @@ void init_windows(WINDOW** my_win, WINDOW** message_win){
     keypad(*my_win, true);
 
     // message window
-    *message_win = newwin(5, WINDOW_SIZE, WINDOW_SIZE, 0);
+    *message_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE, 0);
     box(*message_win, 0 , 0);	
     wrefresh(*message_win);
 }

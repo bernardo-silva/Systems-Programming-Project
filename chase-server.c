@@ -88,6 +88,13 @@ void check_collision(player_t* p, game_t* game, int is_bot){
     }
 }
 
+void show_players_health(WINDOW* win, player_t* players, int start_line){
+    for(int i = 0; i < 10; i++){
+        if(players[i].c != 0) 
+        mvwprintw(win, start_line++,1,"P %c: %d HP", players[i].c, players[i].health);
+    }
+}
+
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -141,6 +148,8 @@ int main(){
 
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
+
+        mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
         
         switch (msg_in.type)
         {
@@ -178,8 +187,10 @@ int main(){
         //     exit(-1);
         // }
 
+        
         mvwprintw(message_win, 1,1,"msg %d type %d to %c",
                     counter++, msg_out.type, p->c);
+        show_players_health(message_win, game.players, 3);
 
         clear_board(main_win);
         draw_board(main_win, &game);
