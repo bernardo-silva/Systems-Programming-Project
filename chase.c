@@ -45,17 +45,21 @@ void clear_board(WINDOW* win){
 
 void draw_board(WINDOW* win, game_t* game){
     for(int i=0; i<10; i++){
-        if(game->players[i].c != 0){
-            wmove(win, game->players[i].y, game->players[i].x);
-            waddch(win, game->players[i].c | COLOR_PAIR(COLOR_PLAYER));
+        if(game->prizes[i].value != 0){
+            wmove(win, game->prizes[i].y, game->prizes[i].x);
+            waddch(win, game->prizes[i].value + 48 | COLOR_PAIR(COLOR_PRIZE));
         }
+    }
+    for(int i=0; i<10; i++){
         if(game->bots[i].c != 0){
             wmove(win, game->bots[i].y, game->bots[i].x);
             waddch(win, game->bots[i].c | COLOR_PAIR(COLOR_BOT));
         }
-        if(game->prizes[i].value != 0){
-            wmove(win, game->prizes[i].y, game->prizes[i].x);
-            waddch(win, game->prizes[i].value + 48 | COLOR_PAIR(COLOR_PRIZE));
+    }
+    for(int i=0; i<10; i++){
+        if(game->players[i].c != 0){
+            wmove(win, game->players[i].y, game->players[i].x);
+            waddch(win, game->players[i].c | COLOR_PAIR(COLOR_PLAYER));
         }
     }
 }
