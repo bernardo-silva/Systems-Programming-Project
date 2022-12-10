@@ -16,18 +16,14 @@ void remove_player (player_t *player){
     player->x = -1;
     player->y = -1;
     player->c = '\0';
-    // player->client_addr = {NULL, NULL};
-    // player->client_addr_size = NULL;
 }
-void initialize_prizes(prize_t * prizes){
+void init_prizes(prize_t * prizes){
     for (int i=0; i<5; i++){
         prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
         prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
         prizes[i].value = 1+rand()%5;
     }
     for (int i=5; i<10; i++){
-        // prizes[i].x = 0;
-        // prizes[i].y = 0;
         prizes[i].value = 0;
     }
 }
@@ -79,6 +75,12 @@ void check_collision(player_t* p, game_t* game, int is_bot){
         }
     }
 }
+void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr){
+    c->index  = idx;
+    c->is_bot = is_bot;
+    c->client_addr = *client_addr;
+    c->client_addr_size = sizeof(*client_addr);
+}
 
 void send_message(int fd, int type, client_t* c){
     message_t msg_out;
@@ -93,25 +95,8 @@ int main(){
     // SOCKET SHENANIGANS
     int sock_fd;
     struct sockaddr_un local_addr;
-
     init_socket(&sock_fd, &local_addr, SERVER_SOCKET);
-    // sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-    // if (sock_fd == -1){
-    //     perror("Error creating socket");
-    //     exit(-1);
-    // }
-    //
-    // struct sockaddr_un local_addr;
-    // local_addr.sun_family = AF_UNIX;
-    // strcpy(local_addr.sun_path, SERVER_SOCKET);
-    //
-    // unlink(SERVER_SOCKET);
-    // int err = bind(sock_fd, (const struct sockaddr *)&local_addr,
-    //                sizeof(local_addr));
-    // if(err == -1) {
-    //     perror("Error binding socket");
-    //     exit(-1);
-    // }
+
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
@@ -133,11 +118,11 @@ int main(){
     ///////////////////////////////////////////////
     // MAIN
     game_t game;
-    client_t clients[20];
+    client_t clients[11];
 
-    initialize_players(game.players, 10);
-    initialize_players(game.bots, 10);
-    initialize_prizes(game.prizes);
+    init_players(game.players, 10);
+    init_players(game.bots, 10);
+    init_prizes(game.prizes);
 
     message_t msg_in;
     message_t msg_out;
@@ -152,6 +137,7 @@ int main(){
         player_t *p;
         client_t *c;
     
+        //Check 5s for new prize
         if(difftime(time(NULL), last_prize) >= 5){
             place_new_prize(game.prizes);
             last_prize = time(NULL);
@@ -162,48 +148,56 @@ int main(){
 
         // mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
         
-        switch (msg_in.type)
-        {
-            case CONNECT:
+        if (msg_in.type == CONNECT){
+            int idx = 0;
+            if(msg_in.is_bot)
+                idx = 10;
+            else{
+                for(idx=0; idx<11;i++)
+                    if(game.players[i].c != 0) break;
                 for(p = game.players; p->c != 0; p++); //encontra o primeiro player indefinido
-                //TO DO: verificar limite jogadores
-                new_player(p, 'A' + p - game.players); //define o player
+                        //
+            }
 
-                int client_idx = p-game.players + 10*msg_in.is_bot;
-                clients[client_idx].index  = p - game.players;
-                clients[client_idx].is_bot = msg_in.is_bot;
-                clients[client_idx].client_addr = client_addr;
-                clients[client_idx].client_addr_size = client_addr_size;
 
-                msg_out.type = BALL_INFORMATION;
-                break;
+                init_client(clients + 10, 10, TRUE, client_addr_size)
+            for(p = game.players; p->c != 0; p++); //encontra o primeiro player indefinido
+            //TO DO: verificar limite jogadores
+            new_player(p, 'A' + p - game.players); //define o player
 
-            case MOVE_BALL:
-                //encontra o player com o endereço correto
-                for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-                
-                p = game.players + c->index;
+            int client_idx = p-game.players + 10*msg_in.is_bot;
+            clients[client_idx].index  = p - game.players;
+            clients[client_idx].is_bot = msg_in.is_bot;
+            clients[client_idx].client_addr = client_addr;
+            clients[client_idx].client_addr_size = client_addr_size;
 
-                move_player(p, msg_in.direction);
-                check_collision(p, &game, c->is_bot); //CORRECT WAY OF CHECKING IF IS BOT?
-                    
-                if(p->health == 0){
-                    msg_out.type = HEALTH_0;
-                    remove_player(p);
-                }
-                else
-                    msg_out.type = FIELD_STATUS;
-                break;
-
-            case DISCONNECT:
-                for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-                remove_player(game.players + c->index);
-                break;
-
-            default:
-                break;
+            msg_out.type = BALL_INFORMATION;
         }
+        else if (msg_in.type == MOVE_BALL){
+            //encontra o player com o endereço correto
+            for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
+            
+            p = game.players + c->index;
 
+            move_player(p, msg_in.direction);
+            check_collision(p, &game, c->is_bot); //CORRECT WAY OF CHECKING IF IS BOT?
+                
+            if(p->health == 0){
+                msg_out.type = HEALTH_0;
+                remove_player(p);
+            }
+            else
+                msg_out.type = FIELD_STATUS;
+            break;
+
+        }
+        else if (msg_in.type == DISCONNECT){
+            for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
+            remove_player(game.players + c->index);
+            break;
+
+        }
+        else continue; //Ignore invalid messages
 
         memcpy(&(msg_out.game), &game, sizeof(game));
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
