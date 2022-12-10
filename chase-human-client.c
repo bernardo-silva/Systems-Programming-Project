@@ -63,9 +63,7 @@ int main(){
         {
             case BALL_INFORMATION:
             case FIELD_STATUS:
-                memcpy(&game.players, &(msg_in.players), sizeof(msg_in.players));
-                memcpy(&game.bots,    &(msg_in.bots),    sizeof(msg_in.bots));
-                memcpy(&game.prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+                memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
                 break;
             default:
                 perror("Error: unknown message type received");

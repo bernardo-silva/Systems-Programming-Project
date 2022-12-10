@@ -1,4 +1,5 @@
 #include "chase.h"
+#include <stdlib.h>
 #include <curses.h>
 
 void draw_player(WINDOW *win, player_t *player, int clear_char){
@@ -71,12 +72,6 @@ void show_players_health(WINDOW* win, player_t* players, int start_line){
     }
 }
 
-void new_player (player_t *player, char c){
-    player->x = WINDOW_SIZE/2;
-    player->y = WINDOW_SIZE/2;
-    player->c = c;
-}
-
 direction_t key2dir(int key){
     switch (key){
         case KEY_UP:
@@ -94,10 +89,28 @@ direction_t key2dir(int key){
 }
 
 char get_player_char(player_t * players, struct sockaddr_un my_address){
-    for(int i=0; i<10; i++){
-        if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
-            return players[i].c;
-    }
+    // for(int i=0; i<10; i++){
+    //     if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
+    //         return players[i].c;
+    // }
 
     return '\0';
+}
+
+void init_socket(int* fd, struct sockaddr_un* addr, char* path){
+    *fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (*fd == -1){
+        perror("Error creating socket");
+        exit(-1);
+    }
+
+    addr->sun_family = AF_UNIX;
+    strcpy(addr->sun_path, path);
+
+    unlink(path);
+    int err = bind(*fd, (const struct sockaddr *)addr, sizeof(*addr));
+    if(err == -1) {
+        perror("Error binding socket");
+        exit(-1);
+    }
 }
