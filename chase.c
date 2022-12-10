@@ -71,12 +71,6 @@ void show_players_health(WINDOW* win, player_t* players, int start_line){
     }
 }
 
-void new_player (player_t *player, char c){
-    player->x = WINDOW_SIZE/2;
-    player->y = WINDOW_SIZE/2;
-    player->c = c;
-}
-
 direction_t key2dir(int key){
     switch (key){
         case KEY_UP:

@@ -1,72 +1,106 @@
 #include <stdlib.h>
 #include <ncurses.h>
+#include <time.h>
 
 #include "chase.h"
 
-WINDOW * message_win;
-
-void new_player (player_t *player, char c){
-    player->x = WINDOW_SIZE/2;
-    player->y = WINDOW_SIZE/2;
-    player->c = c;
-}
-
-void move_player (player_t * player, int direction){
-    if (direction == KEY_UP){
-        if (player->y  != 1){
-            player->y --;
-        }
-    }
-    if (direction == KEY_DOWN){
-        if (player->y  != WINDOW_SIZE-2){
-            player->y ++;
-        }
-    }
-    if (direction == KEY_LEFT){
-        if (player->x  != 1){
-            player->x --;
-        }
-    }
-    if (direction == KEY_RIGHT)
-        if (player->x  != WINDOW_SIZE-2){
-            player->x ++;
-    }
-}
-
-player_t p1;
-
 int main(){
+    ///////////////////////////////////////////////
+    // SOCKET SHENANIGANS
+    int sock_fd;
+    sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (sock_fd == -1){
+        perror("Error creating socket");
+        exit(-1);
+    }  
+    struct sockaddr_un local_client_addr;
+    local_client_addr.sun_family = AF_UNIX;
+    sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
+
+    unlink(local_client_addr.sun_path);
+    int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
+    if(err == -1) {
+        perror("Error binding socket");
+        exit(-1);
+    }
+
+    struct sockaddr_un server_addr;
+    server_addr.sun_family = AF_UNIX;
+    strcpy(server_addr.sun_path, SERVER_SOCKET);
+    
+    ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
-    keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
+    // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
+    srand(time(NULL));
 
-    /* creates a window and draws a border */
-    WINDOW * my_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
-    box(my_win, 0 , 0);	
-    wrefresh(my_win);
-    keypad(my_win, true);
+    ///////////////////////////////////////////////
+    // WINDOW CREATION
+    WINDOW *main_win, *message_win;
+    init_windows(&main_win, &message_win);
 
-    /* creates a window and draws a border */
-    message_win = newwin(5, WINDOW_SIZE, WINDOW_SIZE, 0);
-    box(message_win, 0 , 0);	
-    wrefresh(message_win);
+    ///////////////////////////////////////////////
+    // CONNECTION
+    message_t msg_in;
+    message_t msg_out;
+    msg_out.type = CONNECT;
+    sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
+                (const struct sockaddr *)&server_addr, sizeof(server_addr));
+    // mvwprintw(message_win, 1,1,"connection request sent");
 
-    new_player(&p1, 'y');
-    draw_player(my_win, &p1, true);
+    ///////////////////////////////////////////////
+    // MAIN
+    game_t game;
+
+    time_t last_move;
+    time(&last_move);
+
+    // initialize_players(players, 10);
+    // initialize_players(bots, 10);
 
     int key = -1;
     while(key != 27 && key != 'q'){
-        key = wgetch(my_win);		
-        if (key == KEY_LEFT || key == KEY_RIGHT || key == KEY_UP || key == KEY_DOWN){
-            draw_player(my_win, &p1, false);
-            move_player (&p1, key);
-            draw_player(my_win, &p1, true);
+        //receber mensagem do servidor
+        recv(sock_fd, &msg_in, sizeof(msg_in), 0);
+
+        switch (msg_in.type)
+        {
+            case BALL_INFORMATION:
+            case FIELD_STATUS:
+                memcpy(&game.players, &(msg_in.players), sizeof(msg_in.players));
+                memcpy(&game.bots,    &(msg_in.bots),    sizeof(msg_in.bots));
+                memcpy(&game.prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+                break;
+            default:
+                perror("Error: unknown message type received");
+                exit(-1);
         }
 
-        mvwprintw(message_win, 1,1,"%c key pressed", key);
-        wrefresh(message_win);	
+        // update main window
+        clear_board(main_win);
+        draw_board(main_win, &game);
+        wrefresh(main_win);
+        wrefresh(message_win);
+
+        // wait until next move, and chose at random
+        while (difftime(time(NULL), last_move) < 3){}
+        time(&last_move);
+        msg_out.type = MOVE_BALL;
+        msg_out.direction = rand()%4;
+
+        
+        // message window
+        mvwprintw(message_win, 1,1,"BEEP BOP, you are");
+        mvwprintw(message_win, 2,1, "a bot.");
+        show_players_health(message_win, game.players, 3);
+        wrefresh(message_win);
+        
+        // send msg to server
+        sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
+                (const struct sockaddr *)&server_addr, sizeof(server_addr));
     }
 
+    endwin();
     exit(0);
 }
