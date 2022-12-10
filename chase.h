@@ -56,15 +56,13 @@ typedef struct message_t{
     message_type_t type;
     char c;
     int is_bot;
-    direction_t direction;
+    direction_t direction[10];
     game_t game;
 } message_t;
 
 void init_windows(WINDOW** my_win, WINDOW** message_win);
 void init_socket(int* fd, struct sockaddr_un* addr, char* path);
 void initialize_players(player_t * players, int number);
-
-void new_player (player_t *player, char c);
 
 void clear_board(WINDOW* win);
 void draw_board(WINDOW* win, game_t* game);

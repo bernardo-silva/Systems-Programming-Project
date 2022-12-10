@@ -45,6 +45,7 @@ int main(){
     message_t msg_in;
     message_t msg_out;
     msg_out.type = CONNECT;
+    msg_out.is_bot = true;
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
     // mvwprintw(message_win, 1,1,"connection request sent");
@@ -56,11 +57,10 @@ int main(){
     time_t last_move;
     time(&last_move);
 
-    // initialize_players(players, 10);
-    // initialize_players(bots, 10);
-
     int key = -1;
     while(key != 27 && key != 'q'){
+        key = wgetch(main_win);
+
         //receber mensagem do servidor
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
 
@@ -68,9 +68,7 @@ int main(){
         {
             case BALL_INFORMATION:
             case FIELD_STATUS:
-                memcpy(&game.players, &(msg_in.players), sizeof(msg_in.players));
-                memcpy(&game.bots,    &(msg_in.bots),    sizeof(msg_in.bots));
-                memcpy(&game.prizes,  &(msg_in.prizes),  sizeof(msg_in.prizes));
+                memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
                 break;
             default:
                 perror("Error: unknown message type received");
@@ -87,12 +85,14 @@ int main(){
         while (difftime(time(NULL), last_move) < 3){}
         time(&last_move);
         msg_out.type = MOVE_BALL;
-        msg_out.direction = rand()%4;
+
+        for(int i=0; i<10; i++)
+            msg_out.direction[i] = rand()%4;
 
         
         // message window
-        mvwprintw(message_win, 1,1,"BEEP BOP, you are");
-        mvwprintw(message_win, 2,1, "a bot.");
+        mvwprintw(message_win, 1,1,"BEEP BOPS, you are");
+        mvwprintw(message_win, 2,1, "the master of bots.");
         show_players_health(message_win, game.players, 3);
         wrefresh(message_win);
         
