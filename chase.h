@@ -63,4 +63,5 @@ void init_windows(WINDOW** my_win, WINDOW** message_win);
 void initialize_players(player_t * players, int number);
 void clear_board(WINDOW* win);
 void draw_board(WINDOW* win, game_t* game);
+void show_players_health(WINDOW* win, player_t* players, int start_line);
 #endif

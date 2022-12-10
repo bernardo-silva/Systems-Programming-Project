@@ -90,13 +90,6 @@ void check_collision(player_t* p, game_t* game, int is_bot){
     }
 }
 
-void show_players_health(WINDOW* win, player_t* players, int start_line){
-    for(int i = 0; i < 10; i++){
-        if(players[i].c != 0) 
-        mvwprintw(win, start_line++,1,"%c: %d HP", players[i].c, players[i].health);
-    }
-}
-
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -167,7 +160,7 @@ int main(){
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
 
-        mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
+        // mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
         
         switch (msg_in.type)
         {
@@ -198,7 +191,7 @@ int main(){
         memcpy(&(msg_out.bots),    &game.bots,    sizeof(game.bots));
         memcpy(&(msg_out.prizes),  &game.prizes,  sizeof(game.prizes));
 
-        int err = sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
+        sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
         // if (err == -1){
         //     perror("Error: field status couldn't be sent");
@@ -206,9 +199,10 @@ int main(){
         // }
 
         
-        mvwprintw(message_win, 1,1,"msg %d type %d to %c",
-                    counter++, msg_out.type, p->c);
-        show_players_health(message_win, game.players, 3);
+        // mvwprintw(message_win, 1,1,"msg %d type %d to %c",
+        //             counter++, msg_out.type, p->c);
+        mvwprintw(message_win, 1,1,"Tick %d",counter++);
+        show_players_health(message_win, game.players, 2);
 
         clear_board(main_win);
         draw_board(main_win, &game);
