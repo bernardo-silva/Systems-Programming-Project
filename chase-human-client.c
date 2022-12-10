@@ -3,37 +3,6 @@
 
 #include "chase.h"
 
-void new_player (player_t *player, char c){
-    player->x = WINDOW_SIZE/2;
-    player->y = WINDOW_SIZE/2;
-    player->c = c;
-}
-
-direction_t key2dir(int key){
-    switch (key){
-        case KEY_UP:
-            return UP;
-        case KEY_DOWN:
-            return DOWN;
-        case KEY_LEFT:
-            return LEFT;
-        case KEY_RIGHT:
-            return RIGHT;
-
-        default:
-            return -1;
-    }
-}
-
-char get_player_char(player_t * players, struct sockaddr_un my_address){
-    for(int i=0; i<10; i++){
-        if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
-            return players[i].c;
-    }
-
-    return '\0';
-}
-
 int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS

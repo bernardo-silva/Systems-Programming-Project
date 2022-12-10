@@ -64,4 +64,7 @@ void initialize_players(player_t * players, int number);
 void clear_board(WINDOW* win);
 void draw_board(WINDOW* win, game_t* game);
 void show_players_health(WINDOW* win, player_t* players, int start_line);
+void new_player (player_t *player, char c);
+direction_t key2dir(int key);
+char get_player_char(player_t * players, struct sockaddr_un my_address);
 #endif
