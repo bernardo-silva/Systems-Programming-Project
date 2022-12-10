@@ -67,7 +67,7 @@ void check_collision(player_t* p, game_t* game, int is_bot){
     for(int i = 0; i < 10; i++){
         //Check prize
         prize_t prize = game->prizes[i];
-        if(prize.value && prize.x == p->x && prize.y == p->y){
+        if(!is_bot && prize.value && prize.x == p->x && prize.y == p->y){
             p->health = MIN(p->health+prize.value, 10);
             game->prizes[i].value = 0;
             return;
@@ -79,14 +79,6 @@ void check_collision(player_t* p, game_t* game, int is_bot){
                 if(!is_bot) p->health = MIN(p->health+1, 10); // Only increase player's health
             //CHECK IF PLAYER DIED HERE?
         }
-        // //Check bot
-        // if(is_bot) continue; //Ignore collisions between bots
-        // player_t* bot = game->bots + i;
-        // if(bot->c != 0 && p->x == bot->x && p->y == bot->y){
-        //         p->health++;
-        //         p2->health = -;
-        //     //CHECK IF PLAYER DIED HERE?
-        // }
     }
 }
 
@@ -172,9 +164,17 @@ int main(){
                 break;
 
             case MOVE_BALL:
-                for(p = game.players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); //encontra o player com o endereço correto
+                //encontra o player com o endereço correto
+                for(p = game.players; strcmp(p->client_addr.sun_path,client_addr.sun_path); p++); 
+
                 move_player(p, msg_in.direction);
                 check_collision(p, &game, p->c=='*'); //CORRECT WAY OF CHECKING IF IS BOT?
+                if(p->health == 0){
+                    msg_out.type = HEALTH_0;
+                    sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
+                                    (const struct sockaddr *)&client_addr, sizeof(client_addr));
+                    remove_player(p);
+                }
                 msg_out.type = FIELD_STATUS;
                 break;
 
