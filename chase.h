@@ -8,7 +8,14 @@
 
 #define WINDOW_SIZE 20
 #define SERVER_SOCKET "/tmp/server_socket"
+#define COLOR_PLAYER 1
+#define COLOR_BOT 2
+#define COLOR_PRIZE 3
 #define MIN(a,b) ((a>b)?b:a)
+
+
+
+
 typedef struct player_t{
     int x, y;
     char c;

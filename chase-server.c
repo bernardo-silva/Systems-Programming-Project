@@ -1,3 +1,4 @@
+#include <curses.h>
 #include <stdlib.h>
 #include <ncurses.h>
 #include <time.h>
@@ -9,6 +10,7 @@ void new_player (player_t *player, char c, struct sockaddr_un client_addr, sockl
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
+    player->health = 10;
     player->client_addr = client_addr;
     player->client_addr_size = client_addr_size;
 }
@@ -74,17 +76,17 @@ void check_collision(player_t* p, game_t* game, int is_bot){
         player_t* p2 = game->players + i;
         if(p!=p2 && p2->c != 0 && p->x == p2->x && p->y == p2->y){
                 p2->health--;
-                if(!is_bot) p->health++; // Only increase player's health
+                if(!is_bot) p->health = MIN(p->health+1, 10); // Only increase player's health
             //CHECK IF PLAYER DIED HERE?
         }
-        //Check bot
-        if(is_bot) continue; //Ignore collisions between bots
-        player_t* bot = game->bots + i;
-        if(bot->c != 0 && p->x == bot->x && p->y == bot->y){
-                p->health++;
-                p2->health--;
-            //CHECK IF PLAYER DIED HERE?
-        }
+        // //Check bot
+        // if(is_bot) continue; //Ignore collisions between bots
+        // player_t* bot = game->bots + i;
+        // if(bot->c != 0 && p->x == bot->x && p->y == bot->y){
+        //         p->health++;
+        //         p2->health = -;
+        //     //CHECK IF PLAYER DIED HERE?
+        // }
     }
 }
 
@@ -121,12 +123,18 @@ int main(){
     cbreak();               /* Line buffering disabled */
     keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
+    start_color();
+    init_pair(COLOR_PLAYER, COLOR_GREEN, COLOR_BLACK);
+    init_pair(COLOR_BOT, COLOR_RED, COLOR_BLACK);
+    init_pair(COLOR_PRIZE, COLOR_YELLOW, COLOR_BLACK);
+
     srand(time(NULL));
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
     WINDOW *main_win, *message_win;
     init_windows(&main_win, &message_win);
+    wbkgd(main_win, COLOR_PAIR(0));
 
     ///////////////////////////////////////////////
     // MAIN
