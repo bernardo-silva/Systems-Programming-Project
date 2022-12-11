@@ -167,9 +167,8 @@ int main(){
 
                 game.n_players++;
                 new_player(game.players + idx, 'A' + idx); //define o player
-                mvwprintw(message_win, 6,1,"plyr %d", idx);
             }
-            init_client(clients + idx, idx, TRUE, &client_addr);
+            init_client(clients + idx, idx, msg_in.is_bot, &client_addr);
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
