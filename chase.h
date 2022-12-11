@@ -29,6 +29,9 @@ typedef struct game_t{
     player_t players[10]; 
     player_t bots[10];
     prize_t  prizes[10];
+    int n_players;
+    int n_bots;
+    int n_prizes;
 } game_t;
 
 typedef struct client_t{

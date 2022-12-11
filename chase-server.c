@@ -17,7 +17,7 @@ void remove_player (player_t *player){
     player->y = -1;
     player->c = '\0';
 }
-void init_prizes(prize_t * prizes){
+void init_prizes(prize_t* prizes, int* n_prizes){
     for (int i=0; i<5; i++){
         prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
         prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
@@ -26,6 +26,7 @@ void init_prizes(prize_t * prizes){
     for (int i=5; i<10; i++){
         prizes[i].value = 0;
     }
+    *n_prizes = 5;
 }
 void place_new_prize(prize_t * prizes){
     for (int i=0; i<10; i++){
@@ -120,9 +121,10 @@ int main(){
     game_t game;
     client_t clients[11];
 
+    game.n_players = game.n_bots = game.n_prizes = 0;
     init_players(game.players, 10);
     init_players(game.bots, 10);
-    init_prizes(game.prizes);
+    init_prizes(game.prizes, &game.n_prizes);
 
     message_t msg_in;
     message_t msg_out;
@@ -139,7 +141,10 @@ int main(){
     
         //Check 5s for new prize
         if(difftime(time(NULL), last_prize) >= 5){
-            place_new_prize(game.prizes);
+            if(game.n_prizes < 10){
+                place_new_prize(game.prizes);
+                game.n_prizes++;
+            }
             last_prize = time(NULL);
         }
 
@@ -150,50 +155,55 @@ int main(){
         
         if (msg_in.type == CONNECT){
             int idx = 0;
-            if(msg_in.is_bot)
+            if(msg_in.is_bot && game.n_bots == 0){
                 idx = 10;
-            else{
-                for(idx=0; idx<11;i++)
-                    if(game.players[i].c != 0) break;
-                for(p = game.players; p->c != 0; p++); //encontra o primeiro player indefinido
-                        //
+                game.n_bots == MIN(msg_in.n_bots, 10);
+                for (int i=0; i<msg_in.n_bots; i++) 
+                    new_player(game.bots + idx, '*'); //define o player
             }
+            else{
+                if(game.n_players == 10) continue; //Ignore message if too many players
+                for(idx=0; idx<10 && game.players[idx].c; idx++);
 
-
-                init_client(clients + 10, 10, TRUE, client_addr_size)
-            for(p = game.players; p->c != 0; p++); //encontra o primeiro player indefinido
-            //TO DO: verificar limite jogadores
-            new_player(p, 'A' + p - game.players); //define o player
-
-            int client_idx = p-game.players + 10*msg_in.is_bot;
-            clients[client_idx].index  = p - game.players;
-            clients[client_idx].is_bot = msg_in.is_bot;
-            clients[client_idx].client_addr = client_addr;
-            clients[client_idx].client_addr_size = client_addr_size;
-
+                game.n_players++;
+                new_player(game.players + idx, 'A' + idx); //define o player
+            }
+            init_client(clients + idx, idx, TRUE, &client_addr);
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
-            //encontra o player com o endereço correto
-            for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-            
-            p = game.players + c->index;
+            //encontra o client
+            for(c=clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
 
-            move_player(p, msg_in.direction);
-            check_collision(p, &game, c->is_bot); //CORRECT WAY OF CHECKING IF IS BOT?
-                
-            if(p->health == 0){
-                msg_out.type = HEALTH_0;
-                remove_player(p);
+            if(c->is_bot)
+                for (int i=0; i<msg_in.n_bots; i++){
+                    move_player(&game.bots[i], msg_in.direction[i]);
+                    check_collision(&game.bots[i], &game, c->is_bot);
+                }
+            else {
+                p = game.players + c->index;
+                if(p->health == 0){
+                    msg_out.type = HEALTH_0;
+                    remove_player(p);
+                }
+                else{
+                    msg_out.type = FIELD_STATUS;
+                    move_player(p, msg_in.direction[0]);
+                    check_collision(p, &game, c->is_bot);
+                }
             }
-            else
-                msg_out.type = FIELD_STATUS;
-            break;
-
         }
         else if (msg_in.type == DISCONNECT){
             for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-            remove_player(game.players + c->index);
+            if(c->is_bot){
+                for (int i=0; i<msg_in.n_bots; i++)
+                    remove_player(&game.bots[i]);
+                game.n_bots = 0;
+            }
+            else{
+                remove_player(game.players + c->index);
+                game.n_players--;
+            }
             break;
 
         }
