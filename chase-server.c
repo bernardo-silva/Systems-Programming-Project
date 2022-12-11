@@ -151,15 +151,15 @@ int main(){
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
 
-        mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
+        // mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
         
         if (msg_in.type == CONNECT){
             int idx = 0;
             if(msg_in.is_bot && game.n_bots == 0){
                 idx = 10;
-                game.n_bots == MIN(msg_in.n_bots, 10);
-                for (int i=0; i<msg_in.n_bots; i++) 
-                    new_player(game.bots + idx, '*'); //define o player
+                game.n_bots = MIN(msg_in.n_bots, 10);
+                for (int i=0; i<game.n_bots; i++) 
+                    new_player(game.bots + i, '*'); //define o player
             }
             else{
                 if(game.n_players == 10) continue; //Ignore message if too many players
@@ -167,6 +167,7 @@ int main(){
 
                 game.n_players++;
                 new_player(game.players + idx, 'A' + idx); //define o player
+                mvwprintw(message_win, 6,1,"plyr %d", idx);
             }
             init_client(clients + idx, idx, TRUE, &client_addr);
             msg_out.type = BALL_INFORMATION;

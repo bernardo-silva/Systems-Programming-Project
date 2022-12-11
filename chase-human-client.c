@@ -43,6 +43,7 @@ int main(){
     message_t msg_in;
     message_t msg_out;
     msg_out.type = CONNECT;
+    msg_out.is_bot = FALSE;
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
     // mvwprintw(message_win, 1,1,"connection request sent");
@@ -84,7 +85,7 @@ int main(){
                 msg_out.type = DISCONNECT;
                 invalid_key = false;
             }
-            else if ((msg_out.direction = key2dir(key)) != -1){
+            else if ((msg_out.direction[0] = key2dir(key)) != -1){
                 msg_out.type = MOVE_BALL;
                 invalid_key = false;
             }

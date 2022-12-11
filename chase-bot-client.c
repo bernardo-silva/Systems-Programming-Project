@@ -65,9 +65,9 @@ int main(int argc, char* argv[]){
 
     
 
-    int key = -1;
-    while(key != 27 && key != 'q'){
-        key = wgetch(main_win);
+    // int key = -1;
+    while(1){
+        // key = wgetch(main_win);
 
         //receber mensagem do servidor
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]){
         wrefresh(message_win);
 
         // wait until next move, and chose at random
-        while (difftime(time(NULL), last_move) < 3){}
+        while (difftime(time(NULL), last_move) < 1){}
         time(&last_move);
         msg_out.type = MOVE_BALL;
 
