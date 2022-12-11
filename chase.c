@@ -29,7 +29,7 @@ void init_windows(WINDOW** my_win, WINDOW** message_win){
     wrefresh(*message_win);
 }
 
-void initialize_players(player_t * players, int number){
+void init_players(player_t * players, int number){
     for(int i=0; i<number; i++){
         players[i].c = '\0';
     }

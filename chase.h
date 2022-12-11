@@ -63,7 +63,7 @@ typedef struct message_t{
 
 void init_windows(WINDOW** my_win, WINDOW** message_win);
 void init_socket(int* fd, struct sockaddr_un* addr, char* path);
-void initialize_players(player_t * players, int number);
+void init_players(player_t * players, int number);
 
 void clear_board(WINDOW* win);
 void draw_board(WINDOW* win, game_t* game);
