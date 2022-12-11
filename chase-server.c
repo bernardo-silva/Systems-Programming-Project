@@ -151,7 +151,7 @@ int main(){
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
 
-        // mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
+        mvwprintw(message_win, 2,1,"rcvd %d from %c", msg_in.type, msg_in.c);
         
         if (msg_in.type == CONNECT){
             int idx = 0;

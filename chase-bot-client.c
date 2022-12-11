@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
     msg_out.n_bots = 10;
 
     if (argc == 2){
-        msg_out.n_bots = MIN(10, sscanf(argv[1], "%d"));
+        msg_out.n_bots = MIN(10, atoi(argv[1]));//sscanf(argv[1], "%d"));
     }
 
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
