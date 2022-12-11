@@ -4,7 +4,7 @@
 
 #include "chase.h"
 
-int main(int argc, char** argv){
+int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
     int sock_fd;
