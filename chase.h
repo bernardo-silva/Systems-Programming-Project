@@ -59,6 +59,7 @@ typedef struct message_t{
     message_type_t type;
     char c;
     int is_bot;
+    int n_bots;
     direction_t direction[10];
     game_t game;
 } message_t;

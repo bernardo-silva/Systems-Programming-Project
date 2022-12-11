@@ -4,7 +4,7 @@
 
 #include "chase.h"
 
-int main(){
+int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
     int sock_fd;
@@ -46,6 +46,12 @@ int main(){
     message_t msg_out;
     msg_out.type = CONNECT;
     msg_out.is_bot = true;
+    msg_out.n_bots = 10;
+
+    if (argc == 2){
+        msg_out.n_bots = MIN(10, sscanf(argv[1], "%d"));
+    }
+
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
     // mvwprintw(message_win, 1,1,"connection request sent");
@@ -56,6 +62,8 @@ int main(){
 
     time_t last_move;
     time(&last_move);
+
+    
 
     int key = -1;
     while(key != 27 && key != 'q'){
@@ -86,7 +94,7 @@ int main(){
         time(&last_move);
         msg_out.type = MOVE_BALL;
 
-        for(int i=0; i<10; i++)
+        for(int i=0; i<msg_out.n_bots; i++)
             msg_out.direction[i] = rand()%4;
 
         
