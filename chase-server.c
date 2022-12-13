@@ -196,15 +196,15 @@ int main(){
         else if (msg_in.type == DISCONNECT){
             for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
             if(c->is_bot){
-                for (int i=0; i<msg_in.n_bots; i++)
-                    remove_player(&game.bots[i]);
+                for (int i=0; i<game.n_bots; i++)
+                    remove_player(game.bots+i);
                 game.n_bots = 0;
             }
             else{
                 remove_player(game.players + c->index);
                 game.n_players--;
             }
-            break;
+            // break;
 
         }
         else continue; //Ignore invalid messages

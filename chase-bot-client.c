@@ -4,6 +4,13 @@
 
 #include "chase.h"
 
+// int wgetch_noblock(WINDOW *win) {
+//     if (kbhit())
+//         return wgetch(win);
+//     else
+//         return -1;
+// }
+
 int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
@@ -39,6 +46,8 @@ int main(int argc, char* argv[]){
     // WINDOW CREATION
     WINDOW *main_win, *message_win;
     init_windows(&main_win, &message_win);
+    nodelay( main_win, true ); // non blocking wgetch()
+    while ( wgetch(main_win) != -1); //cleaning input
 
     ///////////////////////////////////////////////
     // CONNECTION
@@ -65,9 +74,8 @@ int main(int argc, char* argv[]){
 
     
 
-    // int key = -1;
-    while(1){
-        // key = wgetch(main_win);
+    int key = -1;
+    while(key != 27 && key != 'q'){
 
         //receber mensagem do servidor
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
@@ -89,11 +97,17 @@ int main(int argc, char* argv[]){
         wrefresh(main_win);
         wrefresh(message_win);
 
-        // wait until next move, and chose at random
-        while (difftime(time(NULL), last_move) < 1){}
-        time(&last_move);
-        msg_out.type = MOVE_BALL;
+        // wait until next move, check for keypresses
+        while (difftime(time(NULL), last_move) < 1){
+            key = wgetch(main_win);
+            if(key == 27 || key == 'q'){
+                msg_out.type = DISCONNECT;
+                break;
+            }else msg_out.type = MOVE_BALL;
+        }
 
+        //chose moves at random
+        time(&last_move);
         for(int i=0; i<msg_out.n_bots; i++)
             msg_out.direction[i] = rand()%4;
 
@@ -101,6 +115,7 @@ int main(int argc, char* argv[]){
         // message window
         mvwprintw(message_win, 1,1,"BEEP BOPS, you are");
         mvwprintw(message_win, 2,1, "the master of bots.");
+        mvwprintw(message_win, 3,1,"%c key pressed", key);
         show_players_health(message_win, game.players, 3);
         wrefresh(message_win);
         
