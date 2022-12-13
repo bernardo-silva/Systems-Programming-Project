@@ -17,7 +17,7 @@ void draw_board(WINDOW* win, game_t* game){
     for(int i=0; i<10; i++){
         if(game->prizes[i].value != 0){
             wmove(win, game->prizes[i].y, game->prizes[i].x);
-            waddch(win, game->prizes[i].value + 48 | COLOR_PAIR(COLOR_PRIZE));
+            waddch(win, (game->prizes[i].value + 48) | COLOR_PAIR(COLOR_PRIZE));
         }
     }
     for(int i=0; i<10; i++){

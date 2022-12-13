@@ -38,5 +38,5 @@ void init_prizes(prize_t* prizes, int* n_prizes);
 void place_new_prize(prize_t * prizes);
 void check_prize_time(game_t* game, time_t* last_prize, int time_interval);
 
-char get_player_char(player_t * players, struct sockaddr_un my_address);
+// char get_player_char(player_t * players, struct sockaddr_un my_address);
 #endif

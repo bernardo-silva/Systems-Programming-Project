@@ -95,7 +95,7 @@ int main(){
 
         
         // message window
-        mvwprintw(message_win, 1,1,"You are %c", get_player_char(game.players,local_client_addr));
+        // mvwprintw(message_win, 1,1,"You are %c", get_player_char(game.players,local_client_addr));
         mvwprintw(message_win, 2,1,"%c key pressed", key);
         show_players_health(message_win, game.players, 3);
         wrefresh(message_win);

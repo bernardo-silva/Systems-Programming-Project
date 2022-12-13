@@ -95,7 +95,7 @@ int main(){
 
     int counter=0;
     time_t last_prize = time(NULL);
-    player_t *p;
+    // player_t *p;
     client_t *c;
 
     while(1){
