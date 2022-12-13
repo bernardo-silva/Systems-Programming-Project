@@ -2,7 +2,9 @@
 #include <ncurses.h>
 #include <time.h>
 
-#include "chase.h"
+#include "chase-game.h"
+#include "chase-board.h"
+#include "chase-sockets.h"
 
 int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
@@ -110,5 +112,6 @@ int main(int argc, char* argv[]){
     }
 
     endwin();
+    close(sock_fd);
     exit(0);
 }

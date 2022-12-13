@@ -1,95 +1,16 @@
-#include <curses.h>
+#include "chase-game.h"
+#include "chase-board.h"
+#include "chase-sockets.h"
 #include <stdlib.h>
-#include <ncurses.h>
-#include <time.h>
-#include <unistd.h>
 
-#include "chase.h"
+// void send_message(int fd, int type, client_t* c){
+//     message_t msg_out;
+//     msg_out.type = type;
+//
+//     sendto(fd, &msg_out, sizeof(msg_out), 0, 
+//                     (const struct sockaddr *)&c->client_addr, c->client_addr_size);
+// }
 
-void new_player (player_t *player, char c){
-    player->x = WINDOW_SIZE/2;
-    player->y = WINDOW_SIZE/2;
-    player->c = c;
-    player->health = 10;
-}
-void remove_player (player_t *player){
-    player->x = -1;
-    player->y = -1;
-    player->c = '\0';
-}
-void init_prizes(prize_t* prizes, int* n_prizes){
-    for (int i=0; i<5; i++){
-        prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].value = 1+rand()%5;
-    }
-    for (int i=5; i<10; i++){
-        prizes[i].value = 0;
-    }
-    *n_prizes = 5;
-}
-void place_new_prize(prize_t * prizes){
-    for (int i=0; i<10; i++){
-        if (prizes[i].value == 0){
-            prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
-            prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
-            prizes[i].value = 1+rand()%5;
-            break;
-        }
-    }
-}
-void move_player (player_t * player, direction_t direction){
-    switch (direction) {
-        case UP:
-            if (player->y != 1)
-                player->y--;
-            break;
-        case DOWN:
-            if (player->y != WINDOW_SIZE-2)
-                player->y++;
-            break;
-        case LEFT:
-            if (player->x != 1)
-                player->x--;
-            break;
-        case RIGHT:
-            if (player->x != WINDOW_SIZE-2)
-                player->x++;
-            break;
-    }
-}
-void check_collision(player_t* p, game_t* game, int is_bot){
-    for(int i = 0; i < 10; i++){
-        //Check prize
-        prize_t prize = game->prizes[i];
-        if(!is_bot && prize.value && prize.x == p->x && prize.y == p->y){
-            p->health = MIN(p->health+prize.value, 10);
-            game->prizes[i].value = 0;
-            return;
-        }
-        //Check player
-        player_t* p2 = game->players + i;
-        if(p!=p2 && p2->c != 0 && p->x == p2->x && p->y == p2->y){
-                p2->health--;
-                if(!is_bot) p->health = MIN(p->health+1, 10); // Only increase player's health
-            //CHECK IF PLAYER DIED HERE?
-        }
-    }
-}
-void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr){
-    c->index  = idx;
-    c->is_bot = is_bot;
-    c->client_addr = *client_addr;
-    c->client_addr_size = sizeof(*client_addr);
-}
-
-void send_message(int fd, int type, client_t* c){
-    message_t msg_out;
-    msg_out.type = type;
-
-    sendto(fd, &msg_out, sizeof(msg_out), 0, 
-                    (const struct sockaddr *)&c->client_addr, c->client_addr_size);
-}
 
 int main(){
     ///////////////////////////////////////////////
@@ -140,13 +61,7 @@ int main(){
         client_t *c;
     
         //Check 5s for new prize
-        if(difftime(time(NULL), last_prize) >= 5){
-            if(game.n_prizes < 10){
-                place_new_prize(game.prizes);
-                game.n_prizes++;
-            }
-            last_prize = time(NULL);
-        }
+        check_prize_time(&game, &last_prize, 5);
 
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
@@ -179,10 +94,11 @@ int main(){
                 for (int i=0; i<msg_in.n_bots; i++){
                     move_player(&game.bots[i], msg_in.direction[i]);
                     check_collision(&game.bots[i], &game, c->is_bot);
+                    msg_out.type = FIELD_STATUS;
                 }
             else {
                 p = game.players + c->index;
-                if(p->health == 0){
+                if(p->health <= 0){
                     msg_out.type = HEALTH_0;
                     remove_player(p);
                 }
@@ -230,5 +146,6 @@ int main(){
     }
 
     endwin();
+    close(sock_fd);
     exit(0);
 }

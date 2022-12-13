@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <ncurses.h>
 
-#include "chase.h"
+#include "chase-game.h"
+#include "chase-board.h"
+#include "chase-sockets.h"
 
 int main(){
     ///////////////////////////////////////////////
@@ -104,5 +106,6 @@ int main(){
     }
 
     endwin();
+    close(sock_fd);
     exit(0);
 }
