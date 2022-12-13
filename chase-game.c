@@ -19,7 +19,7 @@ void new_player (player_t *player, char c){
 void remove_player (player_t *player){
     player->x = -1;
     player->y = -1;
-    player->c = '\0';
+    player->c = 0;
 }
 
 void move_player (player_t * player, direction_t direction){

@@ -1,6 +1,7 @@
 #include "chase-game.h"
 #include "chase-board.h"
 #include "chase-sockets.h"
+#include <curses.h>
 #include <stdlib.h>
 
 // void send_message(int fd, int type, client_t* c){
@@ -51,6 +52,17 @@ int on_move_ball(game_t* game, client_t* c, message_t* msg_in){
     return FIELD_STATUS;
 }
 
+void on_disconnect(game_t* game, client_t* c){
+    if(c->is_bot){
+        for (int i=0; i<game->n_bots; i++)
+            remove_player(game->bots+i);
+        game->n_bots = 0;
+    }
+    else{
+        remove_player(game->players + c->index);
+        game->n_players--;
+    }
+}
 
 int main(){
     ///////////////////////////////////////////////
@@ -111,31 +123,22 @@ int main(){
             if (idx == -1) continue;
 
             init_client(clients + idx, idx, msg_in.is_bot, &client_addr);
+            msg_out.c = game.players[idx].c;
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
-            //encontra o client
             for(c=clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-
             msg_out.type = on_move_ball(&game, c, &msg_in);
         }
         else if (msg_in.type == DISCONNECT){
             for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
-            if(c->is_bot){
-                for (int i=0; i<game.n_bots; i++)
-                    remove_player(game.bots+i);
-                game.n_bots = 0;
-            }
-            else{
-                remove_player(game.players + c->index);
-                game.n_players--;
-            }
-            // break;
-
+            on_disconnect(&game, c);
         }
         else continue; //Ignore invalid messages
 
+        //Send response message
         memcpy(&(msg_out.game), &game, sizeof(game));
+
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
         // if (err == -1){
@@ -146,10 +149,16 @@ int main(){
         
         // mvwprintw(message_win, 1,1,"msg %d type %d to %c",
         //             counter++, msg_out.type, p->c);
+
+        werase(main_win);
+        box(main_win, 0 , 0);	
+        wclear(message_win);
+        box(message_win, 0 , 0);	
+
         mvwprintw(message_win, 1,1,"Tick %d",counter++);
         show_players_health(message_win, game.players, 2);
-
-        clear_board(main_win);
+        // clear_board(main_win);
+        // clear_board(message_win);
         draw_board(main_win, &game);
         wrefresh(main_win);
         wrefresh(message_win);	

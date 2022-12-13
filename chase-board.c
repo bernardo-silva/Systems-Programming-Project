@@ -1,4 +1,5 @@
 #include "chase-board.h"
+#include "chase-game.h"
 
 void init_windows(WINDOW** my_win, WINDOW** message_win){
     // main window

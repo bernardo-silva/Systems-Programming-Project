@@ -2,7 +2,7 @@
 #define CHASE_GAME
 
 #include <time.h>
-
+#define WINDOW_SIZE 20
 #define MIN(a,b) ((a>b)?b:a)
 
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;

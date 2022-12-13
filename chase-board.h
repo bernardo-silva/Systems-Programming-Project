@@ -4,7 +4,6 @@
 #include <ncurses.h>
 #include "chase-game.h"
 
-#define WINDOW_SIZE 20
 #define COLOR_PLAYER 1
 #define COLOR_BOT 2
 #define COLOR_PRIZE 3

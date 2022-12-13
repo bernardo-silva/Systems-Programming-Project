@@ -58,6 +58,7 @@ int main(){
     // initialize_players(bots, 10);
 
     int key = -1;
+    char my_c = 0;
     while(key != 27 && key != 'q'){
         //receber mensagem do servidor
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
@@ -65,6 +66,7 @@ int main(){
         switch (msg_in.type)
         {
             case BALL_INFORMATION:
+                my_c = msg_in.c;
             case FIELD_STATUS:
                 memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
                 break;
@@ -95,7 +97,7 @@ int main(){
 
         
         // message window
-        // mvwprintw(message_win, 1,1,"You are %c", get_player_char(game.players,local_client_addr));
+        mvwprintw(message_win, 1,1,"You are %c", my_c);
         mvwprintw(message_win, 2,1,"%c key pressed", key);
         show_players_health(message_win, game.players, 3);
         wrefresh(message_win);
