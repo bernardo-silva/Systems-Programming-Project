@@ -5,13 +5,13 @@
 #include "chase-board.h"
 #include "chase-sockets.h"
 
-int main(){
+int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
     int sock_fd;
     struct sockaddr_un local_client_addr;
     char path[100];
-    sprintf(path,"%s_%d", SERVER_SOCKET, getpid());
+    sprintf(path,"%s_%d", argv[1], getpid());
     init_socket(&sock_fd, &local_client_addr, path);
 
     // int sock_fd;
@@ -22,7 +22,7 @@ int main(){
     // }  
     // struct sockaddr_un local_client_addr;
     // local_client_addr.sun_family = AF_UNIX;
-    // sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
+    // sprintf(local_client_addr.sun_path,"%s_%d", argv[1], getpid());
     //
     // unlink(local_client_addr.sun_path);
     // int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
@@ -33,7 +33,7 @@ int main(){
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, SERVER_SOCKET);
+    strcpy(server_addr.sun_path, argv[1]);
     
     ///////////////////////////////////////////////
     // initscr();              /* Start curses mode */

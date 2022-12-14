@@ -2,6 +2,7 @@
     "files.associations": {
         "chase.h": "c",
         "unistd.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "chase-sockets.h": "c"
     }
 }

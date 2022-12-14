@@ -13,7 +13,8 @@
 //         return -1;
 // }
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]){   
+
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
     int sock_fd;
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]){
     }  
     struct sockaddr_un local_client_addr;
     local_client_addr.sun_family = AF_UNIX;
-    sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
+    sprintf(local_client_addr.sun_path,"%s_%d", argv[1], getpid());
 
     unlink(local_client_addr.sun_path);
     int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]){
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, SERVER_SOCKET);
+    strcpy(server_addr.sun_path, argv[1]);
     
     ///////////////////////////////////////////////
     initscr();              /* Start curses mode */
@@ -59,8 +60,8 @@ int main(int argc, char* argv[]){
     msg_out.is_bot = true;
     msg_out.n_bots = 10;
 
-    if (argc == 2){
-        msg_out.n_bots = MIN(10, atoi(argv[1]));//sscanf(argv[1], "%d"));
+    if (argc == 3){
+        msg_out.n_bots = MIN(10, atoi(argv[2]));//sscanf(argv[1], "%d"));
     }
 
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]){
         wrefresh(message_win);
 
         msg_out.type = MOVE_BALL;
-        
+
         // wait until next move, check for keypresses
         while (difftime(time(NULL), last_move) < 1){
             key = wgetch(main_win);
