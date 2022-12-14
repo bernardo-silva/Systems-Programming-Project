@@ -20,6 +20,7 @@ int on_connect(game_t* game, message_t* msg){
         game->n_bots = MIN(msg->n_bots, MAX_BOTS);
         for (int i=0; i<game->n_bots; i++) 
             new_player(game->bots + i, '*'); //define o player
+        scatter_bots(game);
         return client_idx; //Connection successful
     }
     // Player connecting

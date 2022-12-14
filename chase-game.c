@@ -9,11 +9,45 @@ void init_players(player_t * players, int number){
     }
 }
 
-void new_player (player_t *player, char c){
+void new_player(player_t *player, char c){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
     player->health = MAX_HEALTH;
+}
+
+void scatter_bots(game_t* game){
+    int x,y;
+    for(int i=0; i<game->n_bots; i++){
+        x = 1+rand()%(WINDOW_SIZE-2);
+        y = 1+rand()%(WINDOW_SIZE-2);
+
+        if(is_empty(game, x, y)){
+            game->bots[i].x = x;
+            game->bots[i].y = y;
+        }
+        else i--;
+    }
+}
+
+int is_empty(game_t* game, int x, int y){
+    for(int j=0; j<MAX_PRIZES; j++){
+        if (game->prizes[j].x == x &&
+            game->prizes[j].y == y &&
+            game->prizes[j].value > 0) return false;
+    }
+    for(int j=0; j<MAX_PLAYERS; j++){
+        if (game->players[j].x == x &&
+            game->players[j].y == y &&
+            game->players[j].c != '\0') return false;
+    }
+    for(int j=0; j<MAX_BOTS; j++){
+        if (game->bots[j].x == x &&
+            game->bots[j].y == y &&
+            game->bots[j].c != '\0') return false;
+    }
+
+    return true;
 }
 
 void remove_player (player_t *player){
