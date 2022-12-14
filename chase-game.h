@@ -31,8 +31,9 @@ typedef struct game_t{
 void init_players(player_t * players, int number);
 void new_player (player_t *player, char c);
 void remove_player (player_t *player);
-void move_player (player_t * player, direction_t direction);
-void check_collision(player_t* p, game_t* game, int is_bot);
+// void move_player (player_t * player, direction_t direction);
+// void check_collision(player_t* p, game_t* game, int is_bot);
+void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot);
 
 void init_prizes(prize_t* prizes, int* n_prizes);
 void place_new_prize(prize_t * prizes);

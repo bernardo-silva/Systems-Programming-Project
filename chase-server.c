@@ -31,24 +31,18 @@ int on_connect(game_t* game, message_t* msg){
     return -1; //Connection failed
 }
 
-int on_move_ball(game_t* game, client_t* c, message_t* msg_in){
+void on_move_ball(game_t* game, client_t* c, message_t* msg_in){
     if(c->is_bot){
         for (int i=0; i<msg_in->n_bots; i++){
-            move_player(&game->bots[i], msg_in->direction[i]);
-            check_collision(&game->bots[i], game, c->is_bot);
+            move_and_collide(&game->bots[i], msg_in->direction[i], game, true);
+            // move_player(&game->bots[i], msg_in->direction[i]);
+            // check_collision(&game->bots[i], game, c->is_bot);
         }
-        return FIELD_STATUS;
     }
-
-    player_t* p = game->players + c->index;
-    if(p->health <= 0){
-        remove_player(p);
-        return HEALTH_0;
+    else{
+        player_t* p = game->players + c->index;
+        move_and_collide(p, msg_in->direction[0], game, false);
     }
-
-    move_player(p, msg_in->direction[0]);
-    check_collision(p, game, c->is_bot);
-    return FIELD_STATUS;
 }
 
 
@@ -114,10 +108,17 @@ int main(){
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
-            //encontra o client
-            for(c=clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
+            //find client
+            for(c=clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++);
 
-            msg_out.type = on_move_ball(&game, c, &msg_in);
+            //check if client's ball is alive
+            if(!c->is_bot && game.players[c->index].health <=0)
+                msg_out.type = HEALTH_0;
+                
+            else{
+                on_move_ball(&game, c, &msg_in);
+                msg_out.type = FIELD_STATUS;
+            }
         }
         else if (msg_in.type == DISCONNECT){
             for(c = clients; strcmp(c->client_addr.sun_path, client_addr.sun_path); c++); 
@@ -130,22 +131,14 @@ int main(){
                 remove_player(game.players + c->index);
                 game.n_players--;
             }
-            // break;
-
         }
         else continue; //Ignore invalid messages
 
         memcpy(&(msg_out.game), &game, sizeof(game));
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
-        // if (err == -1){
-        //     perror("Error: field status couldn't be sent");
-        //     exit(-1);
-        // }
 
-        
-        // mvwprintw(message_win, 1,1,"msg %d type %d to %c",
-        //             counter++, msg_out.type, p->c);
+
         mvwprintw(message_win, 1,1,"Tick %d",counter++);
         show_players_health(message_win, game.players, 2);
 

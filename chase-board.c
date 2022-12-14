@@ -43,6 +43,14 @@ void clear_board(WINDOW* win){
     }
 }
 
+void update_view(game_t* game, WINDOW* main_win, WINDOW* message_win){
+            // update main window
+        clear_board(main_win);
+        draw_board(main_win, game);
+        wrefresh(main_win);
+        wrefresh(message_win);
+}
+
 void draw_player(WINDOW *win, player_t *player, int clear_char){
     int ch;
     if(!clear_char){

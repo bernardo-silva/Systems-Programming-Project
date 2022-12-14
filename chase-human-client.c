@@ -68,16 +68,23 @@ int main(){
             case FIELD_STATUS:
                 memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
                 break;
+            case HEALTH_0:
+                memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+                mvwprintw(message_win, 2,1,"You have perished");
+                mvwprintw(message_win, 3,1,"Press q to quit");
+                update_view(&game, main_win, message_win);
+                wgetch(main_win);
+                endwin();
+                close(sock_fd);
+                exit(0);
+                break;
             default:
                 perror("Error: unknown message type received");
                 exit(-1);
         }
 
-        // update main window
-        clear_board(main_win);
-        draw_board(main_win, &game);
-        wrefresh(main_win);
-        wrefresh(message_win);
+        // update both windows
+        update_view(&game, main_win, message_win);
 
         // read keypress
         bool invalid_key = true;
