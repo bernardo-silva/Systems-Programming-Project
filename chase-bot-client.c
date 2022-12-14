@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
         clear_windows(main_win, message_win);
         draw_board(main_win, &game);
         mvwprintw(message_win, 1,1,"BEEP BOPS, you are");
-        mvwprintw(message_win, 2,1, "the master of bots.");
+        mvwprintw(message_win, 2,1, "the master of bots");
         show_players_health(message_win, game.players, 3);
         wrefresh(main_win);
         wrefresh(message_win);
