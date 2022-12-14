@@ -44,21 +44,20 @@ void draw_board(WINDOW* win, game_t* game){
     }
 }
 
-void clear_board(WINDOW* win){
-    for(int i=1; i<WINDOW_SIZE-1; i++){
-        for(int j=1; j<WINDOW_SIZE-1; j++){
-            wmove(win, i, j);
-            waddch(win,' ');  
-        }
-    }
-}
+// void clear_board(WINDOW* win){
+//     for(int i=1; i<WINDOW_SIZE-1; i++){
+//         for(int j=1; j<WINDOW_SIZE-1; j++){
+//             wmove(win, i, j);
+//             waddch(win,' ');  
+//         }
+//     }
+// }
 
-void update_view(game_t* game, WINDOW* main_win, WINDOW* message_win){
-            // update main window
-        clear_board(main_win);
-        draw_board(main_win, game);
-        wrefresh(main_win);
-        wrefresh(message_win);
+void clear_windows(WINDOW* main_win, WINDOW* message_win){
+        werase(main_win);
+        box(main_win, 0 , 0);	
+        werase(message_win);
+        box(message_win, 0 , 0);
 }
 
 void draw_player(WINDOW *win, player_t *player, int clear_char){
@@ -72,7 +71,6 @@ void draw_player(WINDOW *win, player_t *player, int clear_char){
     int p_y = player->y;
     wmove(win, p_y, p_x);
     waddch(win,ch);
-    // wrefresh(win);
 }
 
 void show_players_health(WINDOW* win, player_t* players, int start_line){

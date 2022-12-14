@@ -10,7 +10,9 @@
                 "-Wall",
                 "-pedantic",
                 "${file}",
-                "obj/chase.o",
+                "obj/chase-board.o",
+                "obj/chase-game.o",
+                "obj/chase-sockets.o",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-lncurses"

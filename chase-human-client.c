@@ -65,6 +65,7 @@ int main(){
 
     int key = -1;
     char my_c = 0;
+    int disconnect = false;
     while(key != 27 && key != 'q'){
         //receber mensagem do servidor
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
@@ -75,24 +76,38 @@ int main(){
                 my_c = msg_in.c;
             case FIELD_STATUS:
                 memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+
+                // update view
+                clear_windows(main_win, message_win);
+                draw_board(main_win, &game);
+                mvwprintw(message_win, 1,1,"You are %c", my_c);
+                mvwprintw(message_win, 2,1,"%c key pressed", key);
+                show_players_health(message_win, game.players, 3);
+                wrefresh(main_win);
+                wrefresh(message_win);
+
                 break;
             case HEALTH_0:
                 memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
-                mvwprintw(message_win, 2,1,"You have perished");
-                mvwprintw(message_win, 3,1,"Press q to quit");
-                update_view(&game, main_win, message_win);
+
+                // death screen
+                clear_windows(main_win, message_win);
+                draw_board(main_win, &game);
+                mvwprintw(message_win, 1,1,"You have perished");
+                mvwprintw(message_win, 2,1,"Press 'q' to quit");
+                show_players_health(message_win, game.players, 3);
+                wrefresh(main_win);
+                wrefresh(message_win);
+
                 wgetch(main_win);
-                endwin();
-                close(sock_fd);
-                exit(0);
+                disconnect = true;
                 break;
             default:
                 perror("Error: unknown message type received");
                 exit(-1);
         }
 
-        // update both windows
-        update_view(&game, main_win, message_win);
+        if (disconnect) break;
 
         // read keypress
         bool invalid_key = true;
@@ -107,13 +122,6 @@ int main(){
                 invalid_key = false;
             }
         }
-
-        
-        // message window
-        mvwprintw(message_win, 1,1,"You are %c", my_c);
-        mvwprintw(message_win, 2,1,"%c key pressed", key);
-        show_players_health(message_win, game.players, 3);
-        wrefresh(message_win);
         
         // send msg to server
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 

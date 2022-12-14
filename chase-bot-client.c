@@ -74,12 +74,10 @@ int main(int argc, char* argv[]){
     time_t last_move;
     time(&last_move);
 
-    
-
     int key = -1;
     while(key != 27 && key != 'q'){
 
-        //receber mensagem do servidor
+        //receive message from server
         recv(sock_fd, &msg_in, sizeof(msg_in), 0);
 
         switch (msg_in.type)
@@ -93,33 +91,30 @@ int main(int argc, char* argv[]){
                 exit(-1);
         }
 
-        // update main window
-        clear_board(main_win);
+        // update windows
+        clear_windows(main_win, message_win);
         draw_board(main_win, &game);
+        mvwprintw(message_win, 1,1,"BEEP BOPS, you are");
+        mvwprintw(message_win, 2,1, "the master of bots.");
+        show_players_health(message_win, game.players, 3);
         wrefresh(main_win);
         wrefresh(message_win);
 
+        msg_out.type = MOVE_BALL;
+        
         // wait until next move, check for keypresses
         while (difftime(time(NULL), last_move) < 1){
             key = wgetch(main_win);
             if(key == 27 || key == 'q'){
                 msg_out.type = DISCONNECT;
                 break;
-            }else msg_out.type = MOVE_BALL;
+            }
         }
 
         //chose moves at random
         time(&last_move);
         for(int i=0; i<msg_out.n_bots; i++)
             msg_out.direction[i] = rand()%4;
-
-        
-        // message window
-        mvwprintw(message_win, 1,1,"BEEP BOPS, you are");
-        mvwprintw(message_win, 2,1, "the master of bots.");
-        mvwprintw(message_win, 3,1,"%c key pressed", key);
-        show_players_health(message_win, game.players, 3);
-        wrefresh(message_win);
         
         // send msg to server
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 

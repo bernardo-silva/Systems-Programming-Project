@@ -16,7 +16,7 @@ int on_connect(game_t* game, message_t* msg){
     int client_idx = 0;
     // Bots connecting
     if(msg->is_bot && game->n_bots == 0){
-        client_idx = MAX_PLAYERS + 1;
+        client_idx = MAX_PLAYERS;
         game->n_bots = MIN(msg->n_bots, MAX_BOTS);
         for (int i=0; i<game->n_bots; i++) 
             new_player(game->bots + i, '*'); //define o player
@@ -113,7 +113,7 @@ int main(){
             client_t* c = clients + idx;
 
             //check if client's ball is alive
-            if(!c->is_bot && game.players[c->index].health <=0)
+            if(!c->is_bot && game.players[idx].health <=0)
                 msg_out.type = HEALTH_0;
                 
             else{
@@ -140,7 +140,7 @@ int main(){
 
         werase(main_win);
         box(main_win, 0 , 0);	
-        wclear(message_win);
+        werase(message_win);
         box(message_win, 0 , 0);	
 
         mvwprintw(message_win, 1,1,"Tick %d",counter++);

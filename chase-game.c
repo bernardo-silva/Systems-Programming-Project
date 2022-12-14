@@ -1,7 +1,7 @@
 #include "chase-game.h"
 #include "chase-board.h"
 #include <stdlib.h>
-#include <curses.h>
+#include <ncurses.h>
 
 void init_players(player_t * players, int number){
     for(int i=0; i<number; i++){
