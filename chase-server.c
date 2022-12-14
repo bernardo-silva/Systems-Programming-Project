@@ -58,6 +58,7 @@ void on_disconnect(game_t* game, client_t* c){
         remove_player(game->players + c->index);
         game->n_players--;
     }
+    remove_client(c);
 }
 
 int main(){

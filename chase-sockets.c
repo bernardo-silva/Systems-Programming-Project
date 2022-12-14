@@ -26,6 +26,12 @@ void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_ad
     c->client_addr = *client_addr;
     c->client_addr_size = sizeof(*client_addr);
 }
+
+void remove_client(client_t* c){
+    strcpy(c->client_addr.sun_path, "\0");
+}
+
+
 // char get_player_char(player_t * players, struct sockaddr_un my_address){
 //     for(int i=0; i<10; i++){
 //         if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))

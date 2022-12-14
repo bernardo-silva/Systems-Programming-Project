@@ -38,4 +38,5 @@ typedef struct message_t{
 
 void init_socket(int* fd, struct sockaddr_un* addr, char* path);
 void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr);
+void remove_client(client_t* c);
 #endif // !CHASE-SOCKET
