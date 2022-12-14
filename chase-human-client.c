@@ -9,31 +9,37 @@ int main(){
     ///////////////////////////////////////////////
     // SOCKET SHENANIGANS
     int sock_fd;
-    sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-    if (sock_fd == -1){
-        perror("Error creating socket");
-        exit(-1);
-    }  
     struct sockaddr_un local_client_addr;
-    local_client_addr.sun_family = AF_UNIX;
-    sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
+    char path[100];
+    sprintf(path,"%s_%d", SERVER_SOCKET, getpid());
+    init_socket(&sock_fd, &local_client_addr, path);
 
-    unlink(local_client_addr.sun_path);
-    int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
-    if(err == -1) {
-        perror("Error binding socket");
-        exit(-1);
-    }
+    // int sock_fd;
+    // sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    // if (sock_fd == -1){
+    //     perror("Error creating socket");
+    //     exit(-1);
+    // }  
+    // struct sockaddr_un local_client_addr;
+    // local_client_addr.sun_family = AF_UNIX;
+    // sprintf(local_client_addr.sun_path,"%s_%d", SERVER_SOCKET, getpid());
+    //
+    // unlink(local_client_addr.sun_path);
+    // int err = bind(sock_fd, (const struct sockaddr *) &local_client_addr, sizeof(local_client_addr));
+    // if(err == -1) {
+    //     perror("Error binding socket");
+    //     exit(-1);
+    // }
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
     strcpy(server_addr.sun_path, SERVER_SOCKET);
     
     ///////////////////////////////////////////////
-    initscr();              /* Start curses mode */
-    cbreak();               /* Line buffering disabled */
+    // initscr();              /* Start curses mode */
+    // cbreak();               /* Line buffering disabled */
     // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
-    noecho();               /* Don't echo() while we do getch */
+    // noecho();               /* Don't echo() while we do getch */
 
     ///////////////////////////////////////////////
     // WINDOW CREATION

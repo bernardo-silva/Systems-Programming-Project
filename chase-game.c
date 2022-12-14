@@ -13,7 +13,7 @@ void new_player (player_t *player, char c){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
-    player->health = 10;
+    player->health = MAX_HEALTH;
 }
 
 void remove_player (player_t *player){
@@ -63,19 +63,19 @@ void check_collision(player_t* p, game_t* game, int is_bot){
 }
 
 void init_prizes(prize_t* prizes, int* n_prizes){
-    for (int i=0; i<5; i++){
+    for (int i=0; i<INITIAL_PRIZES; i++){
         prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
         prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
         prizes[i].value = 1+rand()%5;
     }
-    for (int i=5; i<10; i++){
+    for (int i=INITIAL_PRIZES; i<MAX_PRIZES; i++){
         prizes[i].value = 0;
     }
-    *n_prizes = 5;
+    *n_prizes = INITIAL_PRIZES;
 }
 
 void place_new_prize(prize_t * prizes){
-    for (int i=0; i<10; i++){
+    for (int i=0; i<MAX_PRIZES; i++){
         if (prizes[i].value == 0){
             prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
             prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
@@ -87,7 +87,7 @@ void place_new_prize(prize_t * prizes){
 
 void check_prize_time(game_t* game, time_t* last_prize, int time_interval){
     if(difftime(time(NULL), *last_prize) >= time_interval){
-        if(game->n_prizes < 10){
+        if(game->n_prizes < MAX_PRIZES){
             place_new_prize(game->prizes);
             game->n_prizes++;
         }

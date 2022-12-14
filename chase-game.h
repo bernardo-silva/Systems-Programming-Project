@@ -2,8 +2,15 @@
 #define CHASE_GAME
 
 #include <time.h>
-#define WINDOW_SIZE 20
 #define MIN(a,b) ((a>b)?b:a)
+
+#define WINDOW_SIZE 20
+#define MAX_PLAYERS 10
+#define MAX_BOTS 10
+#define MAX_PRIZES 10
+#define MAX_HEALTH 10
+#define INITIAL_PRIZES 5
+
 
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;
 
@@ -19,9 +26,9 @@ typedef struct prize_t{
 } prize_t;
 
 typedef struct game_t{
-    player_t players[10]; 
-    player_t bots[10];
-    prize_t  prizes[10];
+    player_t players[MAX_PLAYERS]; 
+    player_t bots[MAX_BOTS];
+    prize_t  prizes[MAX_PRIZES];
     int n_players;
     int n_bots;
     int n_prizes;
@@ -37,6 +44,4 @@ void check_collision(player_t* p, game_t* game, int is_bot);
 void init_prizes(prize_t* prizes, int* n_prizes);
 void place_new_prize(prize_t * prizes);
 void check_prize_time(game_t* game, time_t* last_prize, int time_interval);
-
-// char get_player_char(player_t * players, struct sockaddr_un my_address);
 #endif

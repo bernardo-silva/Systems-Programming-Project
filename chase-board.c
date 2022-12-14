@@ -3,6 +3,15 @@
 
 void init_windows(WINDOW** my_win, WINDOW** message_win){
     // main window
+    initscr();              /* Start curses mode */
+    cbreak();               /* Line buffering disabled */
+    // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
+    noecho();               /* Don't echo() while we do getch */
+    start_color();
+    init_pair(COLOR_PLAYER, COLOR_GREEN, COLOR_BLACK);
+    init_pair(COLOR_BOT, COLOR_RED, COLOR_BLACK);
+    init_pair(COLOR_PRIZE, COLOR_YELLOW, COLOR_BLACK);
+
     *my_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
     box(*my_win, 0 , 0);	
     wrefresh(*my_win);
