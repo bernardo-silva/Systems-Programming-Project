@@ -31,11 +31,6 @@ void scatter_bots(game_t* game){
 }
 
 int is_empty(game_t* game, int x, int y){
-    for(int j=0; j<MAX_PRIZES; j++){
-        if (game->prizes[j].x == x &&
-            game->prizes[j].y == y &&
-            game->prizes[j].value > 0) return false;
-    }
     for(int j=0; j<MAX_PLAYERS; j++){
         if (game->players[j].x == x &&
             game->players[j].y == y &&
@@ -45,6 +40,11 @@ int is_empty(game_t* game, int x, int y){
         if (game->bots[j].x == x &&
             game->bots[j].y == y &&
             game->bots[j].c != '\0') return false;
+    }
+    for(int j=0; j<MAX_PRIZES; j++){
+        if (game->prizes[j].x == x &&
+            game->prizes[j].y == y &&
+            game->prizes[j].value > 0) return false;
     }
 
     return true;
@@ -110,6 +110,7 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
         case DOWN:  new_y++; break;
         case LEFT:  new_x--; break;
         case RIGHT: new_x++; break;
+        default: return;
     }
     
     //check if in bounds
@@ -118,29 +119,27 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
             return; // move invalid, no further checks required
 
     // check if there is collision with a BALL (human)
-    for (int i=0; i<10; i++){
+    for (int i=0; i<MAX_PLAYERS; i++){
         if(players[i].x == new_x && players[i].y == new_y){
             if (--players[i].health <= 0)
                 remove_player(&players[i]);
             if(!is_bot)
-                p->health = MIN(p->health+1, 10);
+                p->health = MIN(p->health+1, MAX_HEALTH);
             return;
         }
     }
 
     // check if there is collision with a BOT
-    for (int i=0; i<10; i++){
-        if(bots[i].x == new_x && bots[i].y == new_y){
-           return; //nothing happens
-        }
+    for (int i=0; i<MAX_BOTS; i++){
+        if(bots[i].x == new_x && bots[i].y == new_y) return; //nothing happens
     }
 
     // check if there is collision with a PRIZE
-    for (int i=0; i<10; i++){
+    for (int i=0; i<MAX_PRIZES; i++){
         if(prizes[i].x == new_x && prizes[i].y == new_y && prizes[i].value > 0){
             if(is_bot) return; //nothing happens
             else{
-                p->health = MIN(p->health+prizes[i].value, 10);
+                p->health = MIN(p->health+prizes[i].value, MAX_HEALTH);
                 prizes[i].value = 0;
                 game->n_prizes--;
             }
@@ -184,6 +183,4 @@ void check_prize_time(game_t* game, time_t* last_prize, int time_interval){
         }
         time(last_prize);
     }
-
 }
-
