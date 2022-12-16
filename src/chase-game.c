@@ -126,12 +126,20 @@ void init_prizes(prize_t* prizes, int* n_prizes){
     *n_prizes = INITIAL_PRIZES;
 }
 
-void place_new_prize(prize_t * prizes){
+void place_new_prize(game_t * game){
+    int x,y;
     for (int i=0; i<MAX_PRIZES; i++){
-        if (prizes[i].value == 0){
-            prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
-            prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
-            prizes[i].value = 1+rand()%5;
+        if (game->prizes[i].value == 0){
+            x = 1+rand()%(WINDOW_SIZE-2);
+            y = 1+rand()%(WINDOW_SIZE-2);
+            if(is_empty(game, x, y)){
+                game->prizes[i].x = x;
+                game->prizes[i].y = y;
+                game->prizes[i].value = 1+rand()%5;
+            }else{
+                i--;
+                continue;
+            }
             break;
         }
     }

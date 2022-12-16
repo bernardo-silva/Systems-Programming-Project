@@ -43,6 +43,6 @@ int is_empty(game_t* game, int x, int y);
 void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot);
 
 void init_prizes(prize_t* prizes, int* n_prizes);
-void place_new_prize(prize_t * prizes);
+void place_new_prize(game_t * game, prize_t * prizes);
 void check_prize_time(game_t* game, time_t* last_prize, int time_interval);
 #endif

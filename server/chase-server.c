@@ -2,7 +2,6 @@
 #include "chase-game.h"
 #include "chase-board.h"
 #include "chase-sockets.h"
-// #include <curses.h>
 
 int find_client(struct sockaddr_un* address, client_t* clients, int n_clients){
     for (int i=0; i<n_clients; i++) {
@@ -64,7 +63,7 @@ void on_disconnect(game_t* game, client_t* c){
 int main(){
     srand(time(NULL));
     ///////////////////////////////////////////////
-    // SOCKET SHENANIGANS
+    // SOCKET
     int sock_fd;
     struct sockaddr_un local_addr;
     init_socket(&sock_fd, &local_addr, SERVER_SOCKET);
@@ -90,20 +89,17 @@ int main(){
     init_players(game.bots, MAX_BOTS);
     init_prizes(game.prizes, &game.n_prizes);
 
-    int counter=0;
+    int tick_counter=0;
     time_t last_prize = time(NULL);
 
     while(1){
-        //Check 5s for new prize
-        check_prize_time(&game, &last_prize, 5);
-
         //Receive message from client
         recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
             (struct sockaddr *)&client_addr, &client_addr_size);
 
         if (msg_in.type == CONNECT){
             int idx = on_connect(&game, &msg_in);
-            if (idx == -1) continue;
+            if (idx == -1) continue; //Ignore invalid client
 
             init_client(clients + idx, idx, msg_in.is_bot, &client_addr);
             msg_out.c = game.players[idx].c;
@@ -111,10 +107,10 @@ int main(){
         }
         else if (msg_in.type == MOVE_BALL){
             int idx = find_client(&client_addr, clients, MAX_PLAYERS + 1);
-            if(idx == -1) continue; //Invalid client
+            if(idx == -1) continue; 
             client_t* c = clients + idx;
 
-            //check if client's ball is alive
+            //Check if client's ball is alive
             if(!c->is_bot && game.players[idx].health <=0)
                 msg_out.type = HEALTH_0;
                 
@@ -125,35 +121,30 @@ int main(){
         }
         else if (msg_in.type == DISCONNECT){
             int idx = find_client(&client_addr, clients, MAX_PLAYERS + 1);
-            if(idx == -1) continue; //Invalid client
+            if(idx == -1) continue;
             on_disconnect(&game, clients + idx);
         }
         else continue; //Ignore invalid messages
 
-        //Send response message
-        memcpy(&(msg_out.game), &game, sizeof(game));
+        //Check if new prize is due
+        check_prize_time(&game, &last_prize, 5);
+
+        //Send response
+        memcpy(&(msg_out.game), &game, sizeof(game)); //the game state is sent regardless of message type
 
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
 
-        
-        // mvwprintw(message_win, 1,1,"msg %d type %d to %c",
-        //             counter++, msg_out.type, p->c);
-
-        werase(main_win);
-        box(main_win, 0 , 0);	
-        werase(message_win);
-        box(message_win, 0 , 0);	
-
-        mvwprintw(message_win, 1,1,"Tick %d",counter++);
-        show_players_health(message_win, game.players, 2);
-        // clear_board(main_win);
-        // clear_board(message_win);
+        //Update windows
+        clear_windows(main_win, message_win);
         draw_board(main_win, &game);
+        mvwprintw(message_win, 1,1,"Tick %d",tick_counter++);
+        show_players_health(message_win, game.players, 2);
         wrefresh(main_win);
         wrefresh(message_win);	
     }
 
+    //This code is never executed
     printf("GOODBYE");
     endwin();
     close(sock_fd);
