@@ -47,7 +47,8 @@ int main(int argc, char* argv[]){
     int disconnect = false;
     while(key != 27 && key != 'q'){
         //receber mensagem do servidor
-        recv(sock_fd, &msg_in, sizeof(msg_in), 0);
+        int err = recv(sock_fd, &msg_in, sizeof(msg_in), 0);
+        if(err != sizeof(msg_in)) continue; // Ignore invalid messages
 
         switch (msg_in.type)
         {

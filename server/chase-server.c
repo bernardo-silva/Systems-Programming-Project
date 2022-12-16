@@ -38,8 +38,6 @@ void on_move_ball(game_t* game, client_t* c, message_t* msg_in){
     if(c->is_bot){
         for (int i=0; i<msg_in->n_bots; i++){
             move_and_collide(&game->bots[i], msg_in->direction[i], game, true);
-            // move_player(&game->bots[i], msg_in->direction[i]);
-            // check_collision(&game->bots[i], game, c->is_bot);
         }
     }
     else{
@@ -98,8 +96,9 @@ int main(){
         check_prize_time(&game, &last_prize, 5);
 
         //Receive message from client
-        recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
-            (struct sockaddr *)&client_addr, &client_addr_size);
+        int err = recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
+                    (struct sockaddr *)&client_addr, &client_addr_size);
+        if(err != sizeof(msg_in)) continue; // Ignore invalid messages
 
         if (msg_in.type == CONNECT){
             int idx = on_connect(&game, &msg_in);
@@ -136,7 +135,6 @@ int main(){
         sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                         (const struct sockaddr *)&client_addr, sizeof(client_addr));
 
-        
         // mvwprintw(message_win, 1,1,"msg %d type %d to %c",
         //             counter++, msg_out.type, p->c);
 
