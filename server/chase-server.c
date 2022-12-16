@@ -154,6 +154,7 @@ int main(){
         wrefresh(message_win);	
     }
 
+    printf("GOODBYE");
     endwin();
     close(sock_fd);
     exit(0);
