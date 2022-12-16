@@ -17,7 +17,6 @@ chase-human-client: ./obj/chase-human-client.o $(SOURCES)
 
 chase-bot-client: ./obj/chase-bot-client.o $(SOURCES)
 	$(CC) $(CCFLAGS) -o $@ $^ -I $(INCLUDE)
-#--- Now every .c file can easily be found from VPATH !
 ./obj/%.o: ./src/%.c
 	mkdir -p obj
 	$(CC) $(CCFLAGS) -c $^ -o $@ -I $(INCLUDE)
