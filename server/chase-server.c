@@ -18,7 +18,7 @@ int on_connect(game_t* game, message_t* msg){
         client_idx = MAX_PLAYERS;
         game->n_bots = MIN(msg->n_bots, MAX_BOTS);
         for (int i=0; i<game->n_bots; i++) 
-            new_player(game->bots + i, '*'); //define o player
+            new_player(game->bots + i, '*');
         scatter_bots(game);
         return client_idx; //Connection successful
     }
@@ -27,7 +27,7 @@ int on_connect(game_t* game, message_t* msg){
         for(client_idx=0; client_idx<MAX_PLAYERS && game->players[client_idx].c; client_idx++);
 
         game->n_players++;
-        new_player(game->players + client_idx, 'A' + client_idx); //define o player
+        new_player(game->players + client_idx, 'A' + client_idx);
         return client_idx; //Connection successful
     }
     return -1; //Connection failed
@@ -144,7 +144,6 @@ int main(){
     }
 
     //This code is never executed
-    printf("GOODBYE");
     endwin();
     close(sock_fd);
     exit(0);

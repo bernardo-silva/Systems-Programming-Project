@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
 
-
 #include "chase-game.h"
 #include "chase-board.h"
 #include "chase-sockets.h"
@@ -46,7 +45,7 @@ int main(int argc, char* argv[]){
     char my_c = '\0';
     int disconnect = false;
     while(key != 27 && key != 'q'){
-        //receber mensagem do servidor
+        // Receive message from the server
         int err = recv(sock_fd, &msg_in, sizeof(msg_in), 0);
         if(err != sizeof(msg_in)) continue; // Ignore invalid messages
 
