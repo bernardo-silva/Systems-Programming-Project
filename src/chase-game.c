@@ -17,6 +17,7 @@ void new_player(player_t *player, char c){
 }
 
 void scatter_bots(game_t* game){
+    //randomizes bot positions
     int x,y;
     for(int i=0; i<game->n_bots; i++){
         x = 1+rand()%(WINDOW_SIZE-2);
@@ -31,6 +32,7 @@ void scatter_bots(game_t* game){
 }
 
 int is_empty(game_t* game, int x, int y){
+    //checks if there is a ball, bot, or prize in the x,y position
     for(int j=0; j<MAX_PLAYERS; j++){
         if (game->players[j].x == x &&
             game->players[j].y == y &&
@@ -64,16 +66,16 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
     int new_x = p->x;
     int new_y = p->y;
 
-    //calculate new position
+    // calculate new position
     switch (dir) {
         case UP:    new_y--; break;
         case DOWN:  new_y++; break;
         case LEFT:  new_x--; break;
         case RIGHT: new_x++; break;
-        default: return;
+        default: return; // invalid direction = no move 
     }
     
-    //check if in bounds
+    // check if in bounds
     if (new_y == 0 || new_y == WINDOW_SIZE-1 ||
         new_x == 0 || new_x == WINDOW_SIZE-1)
             return; // move invalid, no further checks required
@@ -106,7 +108,7 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
         }
     }
 
-    // move (only if empty or human and ate a prize)
+    // update position (only if empty or human and ate a prize)
     p->x = new_x;
     p->y = new_y;
     return;

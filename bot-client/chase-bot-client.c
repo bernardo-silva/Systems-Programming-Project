@@ -10,7 +10,7 @@ int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET
     if(argc < 2){
-        perror("Invalid arguments. Please provide server address. By default this is \"/tmp/server_socket\"\n");
+        printf("Invalid arguments. Please provide server address. By default this is \"/tmp/server_socket\"\n");
         exit(-1);
     }
     int sock_fd;
