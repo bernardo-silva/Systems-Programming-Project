@@ -80,13 +80,14 @@ int main(int argc, char* argv[]){
 
         msg_out.type = MOVE_BALL;
 
-        // wait until next move, check for keypresses
+        // active wait until next move, check for quit intention
         while (difftime(time(NULL), last_move) < 3){
             key = wgetch(main_win);
             if(key == 27 || key == 'q'){
                 msg_out.type = DISCONNECT;
                 break;
             }
+            usleep(100000); //100ms sleep timer to lower resource load
         }
 
         //chose moves at random

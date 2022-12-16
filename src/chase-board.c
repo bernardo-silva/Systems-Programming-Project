@@ -7,6 +7,7 @@ void init_windows(WINDOW** my_win, WINDOW** message_win){
     cbreak();               /* Line buffering disabled */
     // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
+    curs_set(0);
     start_color();
     init_pair(COLOR_PLAYER, COLOR_GREEN, COLOR_BLACK);
     init_pair(COLOR_BOT, COLOR_RED, COLOR_BLACK);

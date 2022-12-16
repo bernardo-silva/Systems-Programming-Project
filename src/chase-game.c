@@ -148,7 +148,7 @@ void place_new_prize(game_t * game){
 void check_prize_time(game_t* game, time_t* last_prize, int time_interval){
     if(difftime(time(NULL), *last_prize) >= time_interval){
         if(game->n_prizes < MAX_PRIZES){
-            place_new_prize(game->prizes);
+            place_new_prize(game);
             game->n_prizes++;
         }
         time(last_prize);
