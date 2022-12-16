@@ -44,15 +44,6 @@ void draw_board(WINDOW* win, game_t* game){
     }
 }
 
-// void clear_board(WINDOW* win){
-//     for(int i=1; i<WINDOW_SIZE-1; i++){
-//         for(int j=1; j<WINDOW_SIZE-1; j++){
-//             wmove(win, i, j);
-//             waddch(win,' ');  
-//         }
-//     }
-// }
-
 void clear_windows(WINDOW* main_win, WINDOW* message_win){
         werase(main_win);
         box(main_win, 0 , 0);	

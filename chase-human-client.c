@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
-#include <sys/socket.h>
+
 
 #include "chase-game.h"
 #include "chase-board.h"
@@ -8,26 +8,21 @@
 
 int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
-    // SOCKET SHENANIGANS
+    // SOCKET
     if(argc != 2){
-        perror("Invalid arguments. Please provide server address.");
+        printf("Invalid arguments. Please provide server address. By default this is \"/tmp/server_socket\"\n");
         exit(-1);
     }
     int sock_fd;
-    struct sockaddr_un local_client_addr;
     char path[100];
     sprintf(path,"%s_%d", argv[1], getpid());
+
+    struct sockaddr_un local_client_addr;
     init_socket(&sock_fd, &local_client_addr, path);
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
     strcpy(server_addr.sun_path, argv[1]);
-    
-    ///////////////////////////////////////////////
-    // initscr();              /* Start curses mode */
-    // cbreak();               /* Line buffering disabled */
-    // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
-    // noecho();               /* Don't echo() while we do getch */
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
@@ -39,20 +34,16 @@ int main(int argc, char* argv[]){
     message_t msg_in;
     message_t msg_out;
     msg_out.type = CONNECT;
-    msg_out.is_bot = FALSE;
+    msg_out.is_bot = false;
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
-    // mvwprintw(message_win, 1,1,"connection request sent");
 
     ///////////////////////////////////////////////
     // MAIN
     game_t game;
 
-    // initialize_players(players, 10);
-    // initialize_players(bots, 10);
-
     int key = -1;
-    char my_c = 0;
+    char my_c = '\0';
     int disconnect = false;
     while(key != 27 && key != 'q'){
         //receber mensagem do servidor

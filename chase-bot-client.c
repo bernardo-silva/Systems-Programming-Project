@@ -6,20 +6,13 @@
 #include "chase-board.h"
 #include "chase-sockets.h"
 
-// int wgetch_noblock(WINDOW *win) {
-//     if (kbhit())
-//         return wgetch(win);
-//     else
-//         return -1;
-// }
-
 int main(int argc, char* argv[]){   
+    ///////////////////////////////////////////////
+    // SOCKET
     if(argc < 2){
-        perror("Invalid arguments. Please provide server address.");
+        perror("Invalid arguments. Please provide server address. By default this is \"/tmp/server_socket\"\n");
         exit(-1);
     }
-
-    ///////////////////////////////////////////////
     int sock_fd;
     char path[100];
     sprintf(path,"%s_%d", argv[1], getpid());
@@ -46,9 +39,8 @@ int main(int argc, char* argv[]){
     msg_out.is_bot = true;
     msg_out.n_bots = MAX_BOTS;
 
-    if (argc == 3){
+    if (argc == 3)
         msg_out.n_bots = MIN(MAX_BOTS, atoi(argv[2]));
-    }
 
     sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
                 (const struct sockaddr *)&server_addr, sizeof(server_addr));
