@@ -79,26 +79,36 @@ int main (int argc, char *argv[]){
     init_players(game.bots, MAX_BOTS);
     init_prizes(game.prizes, &game.n_prizes);
 
+    int tick_counter = 0;
+
     ///////////////////////////////////////////////
     // SOCKET
     int sock_fd;
     struct sockaddr_in local_addr;
     init_socket(&sock_fd, &local_addr, server_address, port);
 
-    listen(sock_fd, MAX_PLAYERS); //CHECK ARGUMENT
+    if(listen(sock_fd, MAX_PLAYERS) < 0){//CHECK ARGUMENT
+        perror("Error starting to listen");
+        exit(-1);
+    }; 
 
     client_t clients[MAX_PLAYERS + 1];
 
     struct sockaddr_un client_addr;
     socklen_t client_addr_size = sizeof(struct sockaddr_un);
+    int client_sock_fd = -1;
 
-    message_t msg_in, msg_out;
+    message_t msg_in, msg_out; // remove
 
-
-    int tick_counter=0;
     time_t last_prize = time(NULL);
 
+    // Receive new connections
     while(1){
+        client_sock_fd = accept(sock_fd, (struct sockaddr*)&client_addr, &client_addr_size);
+        if (client_sock_fd == -1){
+            continue;
+        }
+
         //Receive message from client
         int err = recvfrom(sock_fd, &msg_in, sizeof(msg_in), 0, 
                     (struct sockaddr *)&client_addr, &client_addr_size);

@@ -11,6 +11,7 @@ void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port){
 
     addr->sin_family = AF_INET;
     addr->sin_port = htons(port);
+
     inet_aton(path, &addr->sin_addr);
     // addr->sin_addr.s_addr = INADDR_ANY;
 
