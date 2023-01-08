@@ -1,6 +1,6 @@
 CC := gcc
 CCFLAGS := -Wall -pedantic 
-INCLUDE := src -lncurses 
+INCLUDE := src -lncurses -pthread
 SOURCES := ./obj/chase-game.o ./obj/chase-board.o ./obj/chase-sockets.o
 #####################################################
 all: server human bot

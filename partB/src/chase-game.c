@@ -6,14 +6,16 @@
 void init_players(player_t * players, int number){
     for(int i=0; i<number; i++){
         players[i].c = '\0';
+        players[i].sock_fd = -1;
     }
 }
 
-void new_player(player_t *player, char c){
+void new_player(player_t *player, char c, int sock_fd){
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
     player->c = c;
     player->health = MAX_HEALTH;
+    player->sock_fd = sock_fd;
 }
 
 void scatter_bots(game_t* game){
@@ -56,6 +58,7 @@ void remove_player (player_t *player){
     player->x = -1;
     player->y = -1;
     player->c = '\0';
+    player->sock_fd = -1;
 }
 
 void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
