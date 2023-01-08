@@ -58,19 +58,12 @@ void on_disconnect(game_t* game, client_t* c){
     remove_client(c);
 }
 
-int main(){
+int main (int argc, char *argv[]){
+    // ERROR CHECK
+    char* server_address = argv[1];
+    int port = atoi(argv[2]);
     srand(time(NULL));
-    ///////////////////////////////////////////////
-    // SOCKET
-    int sock_fd;
-    struct sockaddr_un local_addr;
-    init_socket(&sock_fd, &local_addr, SERVER_SOCKET);
-
-    struct sockaddr_un client_addr;
-    socklen_t client_addr_size = sizeof(struct sockaddr_un);
-
-    message_t msg_in, msg_out;
-
+    ///
     ///////////////////////////////////////////////
     // WINDOW CREATION
     WINDOW *main_win, *message_win;
@@ -78,14 +71,29 @@ int main(){
     wbkgd(main_win, COLOR_PAIR(0));
 
     ///////////////////////////////////////////////
-    // MAIN
+    // GAME
     game_t game;
-    client_t clients[MAX_PLAYERS + 1];
 
     game.n_players = game.n_bots = game.n_prizes = 0;
     init_players(game.players, MAX_PLAYERS);
     init_players(game.bots, MAX_BOTS);
     init_prizes(game.prizes, &game.n_prizes);
+
+    ///////////////////////////////////////////////
+    // SOCKET
+    int sock_fd;
+    struct sockaddr_in local_addr;
+    init_socket(&sock_fd, &local_addr, server_address, port);
+
+    listen(sock_fd, MAX_PLAYERS); //CHECK ARGUMENT
+
+    client_t clients[MAX_PLAYERS + 1];
+
+    struct sockaddr_un client_addr;
+    socklen_t client_addr_size = sizeof(struct sockaddr_un);
+
+    message_t msg_in, msg_out;
+
 
     int tick_counter=0;
     time_t last_prize = time(NULL);

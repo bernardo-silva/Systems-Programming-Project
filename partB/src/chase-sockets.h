@@ -1,9 +1,13 @@
 #ifndef CHASE_SOCKET
 #define CHASE_SOCKET
 
-#include <sys/socket.h>
 #include <unistd.h>
-#include <sys/un.h>
+
+#include <sys/socket.h>
+#include <sys/un.h> // REMOVE?
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "chase-game.h"
 
 #define SERVER_SOCKET "/tmp/server_socket"
@@ -36,7 +40,7 @@ typedef struct message_t{
     game_t game;
 } message_t;
 
-void init_socket(int* fd, struct sockaddr_un* addr, char* path);
+void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port);
 void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr);
 void remove_client(client_t* c);
 #endif // !CHASE-SOCKET

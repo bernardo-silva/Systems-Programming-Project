@@ -2,17 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void init_socket(int* fd, struct sockaddr_un* addr, char* path){
-    *fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port){
+    *fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*fd == -1){
         perror("Error creating socket");
         exit(-1);
     }
 
-    addr->sun_family = AF_UNIX;
-    strcpy(addr->sun_path, path);
+    addr->sin_family = AF_INET;
+    addr->sin_port = htons(port);
+    inet_aton(path, &addr->sin_addr);
+    // addr->sin_addr.s_addr = INADDR_ANY;
 
-    unlink(path);
     int err = bind(*fd, (const struct sockaddr *)addr, sizeof(*addr));
     if(err == -1) {
         perror("Error binding socket");

@@ -56,3 +56,6 @@ chase-human-client
 chase-bot-client
 chase-client
 .vscode
+.cache
+.clangd
+*/compile_commands.json
