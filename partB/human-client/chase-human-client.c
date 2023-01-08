@@ -9,41 +9,28 @@ int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET
     if(argc != 3){
-        perror("Invalid arguments. Please provide server address and port.\n");
+        perror("Invalid arguments. Correct usage: ./chase-human-client \"server_ip\" \"server_port\"\n");
         exit(-1);
     }
-    
-    // ERROR CHECK
     char* server_address = argv[1];
     int port = atoi(argv[2]);
-
     int sock_fd;
-    // char path[100];
-    // sprintf(path,"%s_%d", argv[1], getpid());
-
-    // struct sockaddr_un local_client_addr;
-    
-
     struct sockaddr_in server_addr;
     init_socket(&sock_fd, &server_addr, server_address, port, true);
-    // server_addr.sun_family = AF_UNIX;
-    // strcpy(server_addr.sun_path, );
-
     connect(sock_fd, (const struct sockaddr*)&server_addr, sizeof(server_addr));
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
     WINDOW *main_win, *message_win;
     init_windows(&main_win, &message_win);
+    nodelay( main_win, true ); // non blocking wgetch()
 
     ///////////////////////////////////////////////
     // CONNECTION
     message_t msg_in;
     message_t msg_out;
     msg_out.type = CONNECT;
-    msg_out.is_bot = false;
-    sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
-                (const struct sockaddr *)&server_addr, sizeof(server_addr));
+    write(sock_fd, &msg_out, sizeof(msg_out));
 
     ///////////////////////////////////////////////
     // MAIN
@@ -52,67 +39,64 @@ int main(int argc, char* argv[]){
     int key = -1;
     char my_c = '\0';
     int disconnect = false;
+    int counter = 0;
     while(key != 27 && key != 'q'){
-        // Receive message from the server
-        int err = recv(sock_fd, &msg_in, sizeof(msg_in), 0);
-        if(err != sizeof(msg_in)) continue; // Ignore invalid messages
+        mvwprintw(message_win, 2,1,"Tick: %10d", counter);
+        wrefresh(message_win);
 
-        switch (msg_in.type)
-        {
-            case BALL_INFORMATION:
-                my_c = msg_in.c;
-            case FIELD_STATUS:
-                memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+        // Check for message from the server
+        int N_bytes_read = read(sock_fd, &msg_in, sizeof(msg_in));
 
-                // update view
-                clear_windows(main_win, message_win);
-                draw_board(main_win, &game);
-                mvwprintw(message_win, 1,1,"You are %c", my_c);
-                mvwprintw(message_win, 2,1,"%c key pressed", key);
-                show_players_health(message_win, game.players, 3);
-                wrefresh(main_win);
-                wrefresh(message_win);
+        if(N_bytes_read == sizeof(msg_in)){ // If there is a valid message
+            switch (msg_in.type){
+                case BALL_INFORMATION:
+                    my_c = msg_in.c;
+                case FIELD_STATUS:
+                    memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
 
-                break;
-            case HEALTH_0:
-                memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+                    // update view
+                    clear_windows(main_win, message_win);
+                    draw_board(main_win, &game);
+                    mvwprintw(message_win, 1,1,"You are %c", my_c);
+                    mvwprintw(message_win, 2,1,"%c key pressed", key);
+                    show_players_health(message_win, game.players, 3);
+                    wrefresh(main_win);
+                    wrefresh(message_win);
 
-                // death screen
-                clear_windows(main_win, message_win);
-                draw_board(main_win, &game);
-                mvwprintw(message_win, 1,1,"You have perished");
-                mvwprintw(message_win, 2,1,"Press 'q' to quit");
-                show_players_health(message_win, game.players, 3);
-                wrefresh(main_win);
-                wrefresh(message_win);
+                    break;
+                case HEALTH_0:
+                    memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
 
-                wgetch(main_win);
-                disconnect = true;
-                break;
-            default:
-                perror("Error: unknown message type received");
-                exit(-1);
+                    // death screen
+                    clear_windows(main_win, message_win);
+                    draw_board(main_win, &game);
+                    mvwprintw(message_win, 1,1,"You have perished");
+                    mvwprintw(message_win, 2,1,"Press 'q' to quit");
+                    show_players_health(message_win, game.players, 3);
+                    wrefresh(main_win);
+                    wrefresh(message_win);
+
+                    wgetch(main_win);
+                    disconnect = true;
+                    break;
+                default:
+                    perror("Error: unknown message type received");
+                    exit(-1);
+            }
         }
 
         if (disconnect) break;
 
         // read keypress
-        bool invalid_key = true;
-        while (invalid_key){
-            key = wgetch(main_win);
-            if (key == 27 || key == 'q'){
-                msg_out.type = DISCONNECT;
-                invalid_key = false;
-            }
-            else if ((msg_out.direction[0] = key2dir(key)) != -1){
-                msg_out.type = MOVE_BALL;
-                invalid_key = false;
-            }
+        key = wgetch(main_win);
+        if (key == 27 || key == 'q'){
+            msg_out.type = DISCONNECT;
+            write(sock_fd, &msg_out, sizeof(msg_out));
         }
-        
-        // send msg to server
-        sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
-                (const struct sockaddr *)&server_addr, sizeof(server_addr));
+        else if ((msg_out.direction[0] = key2dir(key)) != -1){
+            msg_out.type = MOVE_BALL;
+            write(sock_fd, &msg_out, sizeof(msg_out));
+        }
     }
 
     endwin();
