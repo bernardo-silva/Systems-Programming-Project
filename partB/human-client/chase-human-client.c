@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
             msg_out.type = DISCONNECT;
             write(sock_fd, &msg_out, sizeof(msg_out));
         }
-        else if ((msg_out.direction[0] = key2dir(key)) != -1){
+        else if ((msg_out.direction = key2dir(key)) != -1){
             msg_out.type = MOVE_BALL;
             write(sock_fd, &msg_out, sizeof(msg_out));
         }
