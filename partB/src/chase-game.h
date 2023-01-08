@@ -18,6 +18,7 @@ typedef struct player_t{
     int x, y;
     char c;
     unsigned int health;
+    int sock_fd;
 } player_t;
 
 typedef struct prize_t{
@@ -36,7 +37,7 @@ typedef struct game_t{
 
 
 void init_players(player_t * players, int number);
-void new_player (player_t *player, char c);
+void new_player (player_t *player, char c, int sock_fd);
 void remove_player (player_t *player);
 void scatter_bots(game_t* game);
 int is_empty(game_t* game, int x, int y);

@@ -24,19 +24,27 @@ void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int cl
     }
 }
 
-void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr){
-    c->index  = idx;
-    c->is_bot = is_bot;
-    c->client_addr = *client_addr;
-    c->client_addr_size = sizeof(*client_addr);
+void init_client(client_t* c, int sockfd, player_t* player){
+    c->sockfd  = sockfd;
+    c->player  = player;
 }
 
 void remove_client(client_t* c){
-    strcpy(c->client_addr.sun_path, "\0");
+    c->sockfd = -1;
+}
+
+void broadcast_message(message_t* msg, player_t* players, int n_players){
+    int n_sent = 0;
+    for(int i=0; i<MAX_PLAYERS; i++){
+        if(players[i].sock_fd < 0) continue;
+
+        write(players[i].sock_fd, msg, sizeof(*msg));
+        if(++n_sent >= n_players) break;
+    }
 }
 
 
-// char get_player_char(player_t * players, struct sockaddr_un my_address){
+// char get_player_char(player_t * players, struct sockaddr_in my_address){
 //     for(int i=0; i<10; i++){
 //         if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
 //     //         return players[i].c;

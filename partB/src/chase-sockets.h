@@ -10,14 +10,16 @@
 
 #include "chase-game.h"
 
-#define SERVER_SOCKET "/tmp/server_socket"
+// #define SERVER_SOCKET "/tmp/server_socket"
 
 typedef struct client_t{
-    struct sockaddr_un client_addr;
-    socklen_t client_addr_size;
-
-    int is_bot;
-    int index;
+    int sockfd;
+    player_t* player;
+    // struct sockaddr_in client_addr;
+    // socklen_t client_addr_size;
+    //
+    // int is_bot;
+    // int index;
 }client_t;
 
 typedef enum message_type{
@@ -34,13 +36,12 @@ typedef enum message_type{
 typedef struct message_t{
     message_type_t type;
     char c;
-    int is_bot;
-    int n_bots;
-    direction_t direction[10];
+    direction_t direction;
     game_t game;
 } message_t;
 
 void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int client_flag);
-void init_client(client_t* c, int idx, int is_bot, struct sockaddr_un* client_addr);
+void init_client(client_t* c, int sockfd, player_t* player);
 void remove_client(client_t* c);
+void broadcast_message(message_t* msg, player_t* players, int n_players);
 #endif // !CHASE-SOCKET
