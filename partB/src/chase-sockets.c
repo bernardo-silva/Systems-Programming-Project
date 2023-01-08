@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port){
+void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int client_flag){
     *fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*fd == -1){
         perror("Error creating socket");
@@ -14,6 +14,8 @@ void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port){
     inet_aton(path, &addr->sin_addr);
     // addr->sin_addr.s_addr = INADDR_ANY;
 
+    if (client_flag) return;
+    
     int err = bind(*fd, (const struct sockaddr *)addr, sizeof(*addr));
     if(err == -1) {
         perror("Error binding socket");

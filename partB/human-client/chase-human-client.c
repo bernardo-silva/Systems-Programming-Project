@@ -8,20 +8,28 @@
 int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // SOCKET
-    if(argc != 2){
-        printf("Invalid arguments. Please provide server address. By default this is \"/tmp/server_socket\"\n");
+    if(argc != 3){
+        perror("Invalid arguments. Please provide server address and port.\n");
         exit(-1);
     }
+    
+    // ERROR CHECK
+    char* server_address = argv[1];
+    int port = atoi(argv[2]);
+
     int sock_fd;
-    char path[100];
-    sprintf(path,"%s_%d", argv[1], getpid());
+    // char path[100];
+    // sprintf(path,"%s_%d", argv[1], getpid());
 
-    struct sockaddr_un local_client_addr;
-    init_socket(&sock_fd, &local_client_addr, path);
+    // struct sockaddr_un local_client_addr;
+    
 
-    struct sockaddr_un server_addr;
-    server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, argv[1]);
+    struct sockaddr_in server_addr;
+    init_socket(&sock_fd, &server_addr, server_address, port, true);
+    // server_addr.sun_family = AF_UNIX;
+    // strcpy(server_addr.sun_path, );
+
+    connect(sock_fd, (const struct sockaddr*)&server_addr, sizeof(server_addr));
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
