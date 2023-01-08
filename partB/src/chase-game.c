@@ -117,20 +117,18 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
     return;
 }
 
-void init_prizes(prize_t* prizes, int* n_prizes){
+void init_prizes(game_t* game){
+    for (int i=0; i<MAX_PRIZES; i++){
+        game->prizes[i].value = 0;
+    }
     for (int i=0; i<INITIAL_PRIZES; i++){
-        prizes[i].x = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].y = 1+rand()%(WINDOW_SIZE-2);
-        prizes[i].value = 1+rand()%5;
+        place_new_prize(game);
     }
-    for (int i=INITIAL_PRIZES; i<MAX_PRIZES; i++){
-        prizes[i].value = 0;
-    }
-    *n_prizes = INITIAL_PRIZES;
+    game->n_prizes = INITIAL_PRIZES;
 }
 
-void place_new_prize(game_t * game){
-    int x,y;
+void place_new_prize(game_t* game){
+    int x, y;
     for (int i=0; i<MAX_PRIZES; i++){
         if (game->prizes[i].value == 0){
             x = 1+rand()%(WINDOW_SIZE-2);

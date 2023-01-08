@@ -5,7 +5,6 @@
 #include "chase-sockets.h"
 #include <pthread.h>
 
-
 game_t game;
 WINDOW *message_win, *main_win;
 
@@ -67,6 +66,8 @@ void * client_thread(void* arg){
         if (msg_in.type == CONNECT){
 
             idx = on_connect(&msg_in, client_sock_fd);
+            mvwprintw(message_win, 1,1, "Idx %d", idx);
+            wrefresh(message_win);	
             if (idx == -1) continue; //Ignore invalid client
 
             // init_client(clients + idx, idx, msg_in.is_bot, &client_addr);
@@ -96,9 +97,9 @@ void * client_thread(void* arg){
         //Send response
         memcpy(&(msg_out.game), &game, sizeof(game)); //the game state is sent regardless of message type
 
-        broadcast_message(&msg_out, game.players, game.n_players);
+        // broadcast_message(&msg_out, game.players, game.n_players);
 
-        // write(client_sock_fd, &msg_out, sizeof(msg_out));
+        write(client_sock_fd, &msg_out, sizeof(msg_out));
         mvwprintw(message_win, 1,1, "Sent message");
         wrefresh(message_win);	
         // sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
@@ -131,7 +132,7 @@ int main (int argc, char *argv[]){
         exit(-1);
     }; 
 
-    client_t clients[MAX_PLAYERS + 1];
+    // client_t clients[MAX_PLAYERS + 1];
 
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(struct sockaddr_in);
@@ -152,7 +153,7 @@ int main (int argc, char *argv[]){
     game.n_players = game.n_bots = game.n_prizes = 0;
     init_players(game.players, MAX_PLAYERS);
     init_players(game.bots, MAX_BOTS);
-    init_prizes(game.prizes, &game.n_prizes);
+    init_prizes(&game);
 
     ///////////////////////////////////////////////
     // PTHREADS
