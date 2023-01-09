@@ -46,31 +46,18 @@ int main(int argc, char* argv[]){
         wrefresh(message_win);
 
         // Check for message from the server
-        mvwprintw(message_win, 3,1,"Waiting for message");
-        wrefresh(message_win);
         int N_bytes_read = read(sock_fd, &msg_in, sizeof(msg_in));
-        mvwprintw(message_win, 4,1,"Received %d", N_bytes_read);
-        wrefresh(message_win);
-        mvwprintw(message_win, 5,1,"Received %d", msg_in.type);
-        wrefresh(message_win);
 
         if(N_bytes_read == sizeof(msg_in)){ // If there is a valid message
             switch (msg_in.type){
                 case BALL_INFORMATION:
                     my_c = msg_in.c;
-                    mvwprintw(message_win, 5,1,"Received %d", msg_in.type);
-                    wrefresh(message_win);
                 case FIELD_STATUS:
                     memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
 
                     // update view
                     // clear_windows(main_win, message_win);
-                    draw_board(main_win, &game);
-                    mvwprintw(message_win, 1,1,"You are %c", my_c);
-                    mvwprintw(message_win, 2,1,"%c key pressed", key);
-                    show_players_health(message_win, game.players, 3);
-                    wrefresh(main_win);
-                    wrefresh(message_win);
+                    redraw_screen(main_win, message_win, &game);
 
                     break;
                 case HEALTH_0:
@@ -83,8 +70,6 @@ int main(int argc, char* argv[]){
                     mvwprintw(message_win, 2,1,"Press 'q' to quit");
                     show_players_health(message_win, game.players, 3);
                     wrefresh(main_win);
-                    wrefresh(message_win);
-                    mvwprintw(message_win, 5,1,"Received %d", msg_in.type);
                     wrefresh(message_win);
 
                     wgetch(main_win);

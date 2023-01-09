@@ -38,14 +38,16 @@ typedef struct game_t{
 } game_t;
 
 
-void init_players(player_t * players, int number);
-void new_player (player_t *player, char c, int sock_fd);
-void remove_player (player_t *player);
+void init_players(game_t* game);
+int new_player(game_t *game, int sock_fd);
+void remove_player(game_t* game, int idx);
+int find_player_slot(game_t* game);
+
 void init_bots(game_t* game);
+
 int is_empty(game_t* game, int x, int y);
-void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot);
+void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot);
 
 void init_prizes(game_t * game);
 void place_new_prize(game_t * game);
-void check_prize_time(game_t* game, time_t* last_prize, int time_interval);
 #endif

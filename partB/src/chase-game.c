@@ -3,19 +3,28 @@
 #include <stdlib.h>
 #include <ncurses.h>
 
-void init_players(player_t * players, int number){
-    for(int i=0; i<number; i++){
-        players[i].c = '\0';
-        players[i].sock_fd = -1;
+void init_players(game_t * game){
+    for(int i=0; i<MAX_PLAYERS; i++){
+        game->players[i].c = '\0';
+        game->players[i].sock_fd = -1;
     }
 }
 
-void new_player(player_t *player, char c, int sock_fd){
+int new_player(game_t *game, int sock_fd){
+    int player_idx = find_player_slot(game);
+    if(player_idx < 0) return -1;
+
+    player_t *player = game->players + player_idx;
+
     player->x = WINDOW_SIZE/2;
     player->y = WINDOW_SIZE/2;
-    player->c = c;
+    player->c = 'A' + player_idx;
     player->health = MAX_HEALTH;
     player->sock_fd = sock_fd;
+
+    game->n_players++;
+
+    return player_idx;
 }
 
 void init_bots(game_t* game){
@@ -57,14 +66,25 @@ int is_empty(game_t* game, int x, int y){
     return true;
 }
 
-void remove_player (player_t *player){
+int find_player_slot(game_t* game){
+    for (int i=0; i<MAX_PLAYERS; i++) {
+        if(game->players[i].c == '\0')
+            return i;
+    }
+    return -1;
+}
+
+void remove_player(game_t *game, int idx){
+    player_t* player = &game->players[idx];
     player->x = -1;
     player->y = -1;
     player->c = '\0';
     player->sock_fd = -1;
+
+    game->n_players--;
 }
 
-void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
+void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot){
     player_t * players = game->players;
     player_t * bots    = game->bots;
     prize_t  * prizes  = game->prizes;
@@ -90,7 +110,7 @@ void move_and_collide(player_t* p, direction_t dir, game_t* game, int is_bot){
     for (int i=0; i<MAX_PLAYERS; i++){
         if(players[i].x == new_x && players[i].y == new_y){
             if (--players[i].health <= 0)
-                remove_player(&players[i]);
+                remove_player(game, i);
             if(!is_bot)
                 p->health = MIN(p->health+1, MAX_HEALTH);
             return;
@@ -132,6 +152,8 @@ void init_prizes(game_t* game){
 
 void place_new_prize(game_t* game){
     int x, y;
+    if(game->n_prizes >= MAX_PRIZES) return;
+
     for (int i=0; i<MAX_PRIZES; i++){
         if (game->prizes[i].value == 0){
             x = 1+rand()%(WINDOW_SIZE-2);
@@ -147,14 +169,5 @@ void place_new_prize(game_t* game){
             break;
         }
     }
-}
-
-void check_prize_time(game_t* game, time_t* last_prize, int time_interval){
-    if(difftime(time(NULL), *last_prize) >= time_interval){
-        if(game->n_prizes < MAX_PRIZES){
-            place_new_prize(game);
-            game->n_prizes++;
-        }
-        time(last_prize);
-    }
+    game->n_prizes++;
 }

@@ -1,7 +1,7 @@
 #include "chase-board.h"
 #include "chase-game.h"
 
-void init_windows(WINDOW** my_win, WINDOW** message_win){
+void init_windows(WINDOW** main_win, WINDOW** message_win){
     // main window
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
@@ -13,10 +13,11 @@ void init_windows(WINDOW** my_win, WINDOW** message_win){
     init_pair(COLOR_BOT, COLOR_RED, COLOR_BLACK);
     init_pair(COLOR_PRIZE, COLOR_YELLOW, COLOR_BLACK);
 
-    *my_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
-    box(*my_win, 0 , 0);	
-    wrefresh(*my_win);
-    keypad(*my_win, true);
+    *main_win = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
+    box(*main_win, 0 , 0);	
+    wrefresh(*main_win);
+    keypad(*main_win, true);
+    wbkgd(*main_win, COLOR_PAIR(0));
 
     // message window
     *message_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE, 0);
@@ -70,6 +71,15 @@ void show_players_health(WINDOW* win, player_t* players, int start_line){
         if(players[i].c != 0) 
         mvwprintw(win, start_line++,1,"%c: %d HP", players[i].c, players[i].health);
     }
+}
+
+void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game){
+    clear_windows(main_win, message_win);
+    draw_board(main_win, game);
+    // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
+    show_players_health(message_win, game->players, 2);
+    wrefresh(main_win);
+    wrefresh(message_win);	
 }
 
 direction_t key2dir(int key){

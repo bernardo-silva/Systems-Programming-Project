@@ -15,5 +15,7 @@ void draw_board(WINDOW* win, game_t* game);
 void clear_windows(WINDOW* main_win, WINDOW* message_win);
 void draw_player(WINDOW *win, player_t *player, int clear_char);
 void show_players_health(WINDOW* win, player_t* players, int start_line);
+void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game);
+
 direction_t key2dir(int key);
 #endif // !CHASE_BOARD
