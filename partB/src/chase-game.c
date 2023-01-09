@@ -18,10 +18,13 @@ void new_player(player_t *player, char c, int sock_fd){
     player->sock_fd = sock_fd;
 }
 
-void scatter_bots(game_t* game){
+void init_bots(game_t* game){
     //randomizes bot positions
     int x,y;
     for(int i=0; i<game->n_bots; i++){
+        game->bots[i].c = '*';
+        game->bots[i].sock_fd = -1;
+
         x = 1+rand()%(WINDOW_SIZE-2);
         y = 1+rand()%(WINDOW_SIZE-2);
 

@@ -1,5 +1,5 @@
 CC := gcc
-CCFLAGS := -Wall -pedantic 
+CCFLAGS := -Wall -pedantic -g
 INCLUDE := src -lncurses -pthread
 SOURCES := ./obj/chase-game.o ./obj/chase-board.o ./obj/chase-sockets.o
 #####################################################

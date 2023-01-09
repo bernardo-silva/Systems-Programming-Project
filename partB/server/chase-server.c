@@ -7,6 +7,7 @@
 
 game_t game;
 WINDOW *message_win, *main_win;
+pthread_mutex_t game_mutex, window_mutex;
 
 int find_player_slot(void){
     for (int i=0; i<MAX_PLAYERS; i++) {
@@ -35,25 +36,17 @@ int on_connect(message_t* msg, int sock_fd){
     return -1; //Connection failed
 }
 
-void on_move_ball(game_t* game, int index, message_t* msg_in){
-    // if(c->is_bot){
-    //     for (int i=0; i<msg_in->n_bots; i++){
-    //         move_and_collide(&game->bots[i], msg_in->direction[i], game, true);
-    //     }
-    // }
-    // else{
-        player_t* p = game->players + index;
-        move_and_collide(p, msg_in->direction, game, false);
-    // }
+void on_move_ball(int idx, direction_t direction){
+    player_t* p = game.players + idx;
+    move_and_collide(p, direction, &game, false);
 }
 
-void on_disconnect(game_t* game, client_t* c){
-    remove_player(c->player);
-    game->n_players--;
-    remove_client(c);
+void on_disconnect(int idx){
+    remove_player(&game.players[idx]);
+    game.n_players--;
 }
 
-void * client_thread(void* arg){
+void* client_thread(void* arg){
     int client_sock_fd = *(int *) arg;
     message_t msg_in, msg_out;
     int idx = -1;
@@ -61,33 +54,27 @@ void * client_thread(void* arg){
     while(1){
         // //Receive message from client
         int err = read(client_sock_fd, &msg_in, sizeof(msg_in));
+
         if(err != sizeof(msg_in)) continue; // Ignore invalid messages
         //
         if (msg_in.type == CONNECT){
 
             idx = on_connect(&msg_in, client_sock_fd);
-            mvwprintw(message_win, 1,1, "Idx %d", idx);
-            wrefresh(message_win);	
             if (idx == -1) continue; //Ignore invalid client
 
-            // init_client(clients + idx, idx, msg_in.is_bot, &client_addr);
             msg_out.c = game.players[idx].c;
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
-            // int idx = find_client(&client_addr, clients, MAX_PLAYERS + 1);
-            //Check if client's ball is alive
-            // if(!c->is_bot && game.players[idx].health <=0)
-            //     msg_out.type = HEALTH_0;
-            //     
-            // else{
-                on_move_ball(&game, idx, &msg_in);
+            if(game.players[idx].health <= 0)
+                msg_out.type = HEALTH_0;
+            else{
+                on_move_ball(idx, msg_in.direction);
                 msg_out.type = FIELD_STATUS;
-            // }
+            }
         }
         else if (msg_in.type == DISCONNECT){
-            // int idx = find_client(&client_addr, clients, MAX_PLAYERS + 1);
-            // on_disconnect(&game, clients + idx);
+            on_disconnect(idx);
         }
         else continue; //Ignore invalid messages
 
@@ -97,13 +84,9 @@ void * client_thread(void* arg){
         //Send response
         memcpy(&(msg_out.game), &game, sizeof(game)); //the game state is sent regardless of message type
 
-        // broadcast_message(&msg_out, game.players, game.n_players);
+        broadcast_message(&msg_out, game.players, game.n_players);
 
-        write(client_sock_fd, &msg_out, sizeof(msg_out));
-        mvwprintw(message_win, 1,1, "Sent message");
-        wrefresh(message_win);	
-        // sendto(sock_fd, &msg_out, sizeof(msg_out), 0, 
-        //                 (const struct sockaddr *)&client_addr, sizeof(client_addr));
+        // write(client_sock_fd, &msg_out, sizeof(msg_out));
 
         //Update windows
         clear_windows(main_win, message_win);
@@ -115,8 +98,48 @@ void * client_thread(void* arg){
     }
 }
 
+void* bot_thread(void* arg){
+    int direction = -1;
+    while(1){
+        usleep(BOT_TIME_INTERVAL*1e6);
+        pthread_mutex_lock(&game_mutex);
+        for(int i = 0; i < game.n_bots; i++){
+            direction = rand() % 4;
+            move_and_collide(game.bots + i, direction, &game, true);
+        }
+        pthread_mutex_unlock(&game_mutex);
+        clear_windows(main_win, message_win);
+        draw_board(main_win, &game);
+        // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
+        show_players_health(message_win, game.players, 2);
+        wrefresh(main_win);
+        wrefresh(message_win);	
+    }
+}
+
+void* prize_thread(void* arg){
+    while(1){
+        usleep(PRIZE_TIME_INTERVAL*1e6);
+
+        pthread_mutex_lock(&game_mutex);
+        if(game.n_prizes < MAX_PRIZES){
+            place_new_prize(&game);
+            game.n_prizes++;
+        }
+        pthread_mutex_unlock(&game_mutex);
+
+        clear_windows(main_win, message_win);
+        draw_board(main_win, &game);
+        // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
+        show_players_health(message_win, game.players, 2);
+        wrefresh(main_win);
+        wrefresh(message_win);	
+    }
+}
+
 int main (int argc, char *argv[]){
     // ERROR CHECK
+    if(argc != 3) exit(-1);
     char* server_address = argv[1];
     int port = atoi(argv[2]);
     srand(time(NULL));
@@ -132,14 +155,12 @@ int main (int argc, char *argv[]){
         exit(-1);
     }; 
 
-    // client_t clients[MAX_PLAYERS + 1];
-
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(struct sockaddr_in);
     int client_sock_fd = -1;
 
     time_t last_prize = time(NULL);
-    ///
+
     ///////////////////////////////////////////////
     // WINDOW CREATION
     // WINDOW *main_win, *message_win;
@@ -150,16 +171,32 @@ int main (int argc, char *argv[]){
     // GAME
     // game_t game;
 
-    game.n_players = game.n_bots = game.n_prizes = 0;
+    game.n_players = game.n_prizes = 0;
+
     init_players(game.players, MAX_PLAYERS);
-    init_players(game.bots, MAX_BOTS);
+
+    game.n_bots = MAX_BOTS;
+    init_bots(&game);
+
     init_prizes(&game);
+    draw_board(main_win, &game);
+    // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
+    show_players_health(message_win, game.players, 2);
+    wrefresh(main_win);
+    wrefresh(message_win);	
 
     ///////////////////////////////////////////////
     // PTHREADS
 
     pthread_t threads[MAX_PLAYERS];
+    pthread_mutex_init(&game_mutex, NULL);
+    pthread_mutex_init(&window_mutex, NULL);
     // int tick_counter = 0;
+    pthread_t bot_thread_id;
+    pthread_create(&bot_thread_id, NULL, &bot_thread, &client_sock_fd);
+
+    pthread_t prize_thread_id;
+    pthread_create(&prize_thread_id, NULL, &prize_thread, &client_sock_fd);
 
     while(1){
         client_sock_fd = accept(sock_fd, (struct sockaddr*)&client_addr, &client_addr_size);
@@ -167,7 +204,7 @@ int main (int argc, char *argv[]){
             exit(-1);
         }
 
-        mvwprintw(message_win, 1,1, "Accepted %s", inet_ntoa(client_addr.sin_addr));
+        mvwprintw(message_win, 4,1, "Accepted %s", inet_ntoa(client_addr.sin_addr));
         wrefresh(message_win);	
 
         pthread_create(threads, NULL, &client_thread, &client_sock_fd);
