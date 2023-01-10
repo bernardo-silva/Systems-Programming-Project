@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
+#include <time.h>
 
 #include "chase-game.h"
 #include "chase-board.h"
@@ -40,13 +41,16 @@ int main(int argc, char* argv[]){
     int key = -1;
     char my_c = '\0';
     int disconnect = false;
-    int counter = 0;
+
+    clock_t last_game_update = clock();
     while(key != 27 && key != 'q'){
-        mvwprintw(message_win, 2,1,"Tick: %10d", counter);
-        wrefresh(message_win);
+
+        // limit game to 60 updates per second to reduce resourse load 
+        usleep( 16666 -  (double) (clock()-last_game_update) / CLOCKS_PER_SEC * 1e6 );
+        last_game_update = clock();
 
         // Check for message from the server
-        int N_bytes_read = read(sock_fd, &msg_in, sizeof(msg_in));
+        int N_bytes_read = recv(sock_fd, &msg_in, sizeof(msg_in), MSG_DONTWAIT);
 
         if(N_bytes_read == sizeof(msg_in)){ // If there is a valid message
             switch (msg_in.type){

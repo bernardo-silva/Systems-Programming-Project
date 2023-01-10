@@ -10,8 +10,8 @@
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10
 #define INITIAL_PRIZES 5
-#define BOT_TIME_INTERVAL 0.1
-#define PRIZE_TIME_INTERVAL 1
+#define BOT_TIME_INTERVAL 0.3
+#define PRIZE_TIME_INTERVAL 3
 
 
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;

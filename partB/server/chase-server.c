@@ -31,6 +31,13 @@ void on_disconnect(int idx){
     remove_player(&game, idx);
 }
 
+void broadcast_but_better(void){
+    message_t msg_out;
+    msg_out.type = FIELD_STATUS;
+    memcpy(&(msg_out.game), &game, sizeof(game));
+    broadcast_message(&msg_out, game.players, game.n_players);
+}
+
 void* client_thread(void* arg){
     int client_sock_fd = *(int *) arg;
     message_t msg_in, msg_out;
@@ -42,6 +49,7 @@ void* client_thread(void* arg){
 
         if(err != sizeof(msg_in)) continue; // Ignore invalid messages
         //
+        pthread_mutex_lock(&game_mutex);
         if (msg_in.type == CONNECT){
 
             idx = on_connect(&msg_in, client_sock_fd);
@@ -65,9 +73,9 @@ void* client_thread(void* arg){
 
         //Send response
         memcpy(&(msg_out.game), &game, sizeof(game)); //the game state is sent regardless of message type
-
         broadcast_message(&msg_out, game.players, game.n_players);
 
+        pthread_mutex_unlock(&game_mutex);
         // write(client_sock_fd, &msg_out, sizeof(msg_out));
 
         //Update windows
@@ -85,6 +93,9 @@ void* bot_thread(void* arg){
             direction = rand() % 4;
             move_and_collide(&game, game.bots + i, direction, true);
         }
+
+        broadcast_but_better();
+
         pthread_mutex_unlock(&game_mutex);
 
         redraw_screen(main_win, message_win, &game);
@@ -98,6 +109,7 @@ void* prize_thread(void* arg){
 
         pthread_mutex_lock(&game_mutex);
         place_new_prize(&game); //CHECK IF SUCCESSFUL?
+        broadcast_but_better();
         pthread_mutex_unlock(&game_mutex);
 
         redraw_screen(main_win, message_win, &game);
@@ -105,6 +117,7 @@ void* prize_thread(void* arg){
     return NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char *argv[]){
     // ERROR CHECK
     if(argc != 3) exit(-1);
