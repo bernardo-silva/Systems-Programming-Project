@@ -3,31 +3,85 @@
 #include "chase-game.h"
 #include "chase-board.h"
 #include "chase-sockets.h"
-#include <pthread.h>
+#include "chase-threads.h"
+
 #include <signal.h>
+#include <unistd.h>
 
 game_t game;
 WINDOW *message_win, *main_win;
-pthread_mutex_t game_mutex, window_mutex;
+game_threads_t game_threads;
+
 volatile sig_atomic_t server_alive = 1;
 
 void kill_server(int sig){
     server_alive = 0;
 }
 
-player_node_t* on_connect(message_t* msg, int sock_fd){
+player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     // Player connecting
-    player_node_t *player_node = new_player(&game, sock_fd);
+    player_node_t* player_node = new_player(&game, sock_fd);
+    if (player_node == NULL) return NULL; //Unable to add player
+
+    sc_message_t msg_out;
+
+    //Inform other players of a new player
+    msg_out.type = FIELD_STATUS;
+    msg_out.update_type = NEW;
+    msg_out.new_x = player_node->player.x;
+    msg_out.new_y = player_node->player.y;
+    msg_out.new_y = player_node->player.health;
+
+    broadcast_message(&msg_out, game.players);
+
+
+    // Inform player of field status
+
+    // Inform player of successful connection
+    msg_out.type = BALL_INFORMATION;
+    msg_out.c = player_node->player.c;
+    write(sock_fd, &msg_out, sizeof(msg_out));
 
     return player_node;
 }
 
-void on_move_ball(player_node_t *player_node, direction_t direction){
-    move_and_collide(&game, &player_node->player, direction, false);
+void on_move_ball(player_node_t *player_node, cs_message_t *msg_in){
+    sc_message_t msg_out;
+
+    if(player_node->player.health <= 0)
+        // TODO
+        msg_out.type = HEALTH_0;
+    else{
+        msg_out.type = FIELD_STATUS;
+        msg_out.update_type = MOVE;
+
+        msg_out.old_x = player_node->player.x;
+        msg_out.old_y = player_node->player.y;
+
+        move_and_collide(&game, &player_node->player, msg_in->direction, false);
+
+        msg_out.new_x = player_node->player.x;
+        msg_out.new_y = player_node->player.y;
+
+        //Onlu broadcast if position changed
+        if(msg_out.old_x !=  msg_out.new_x || msg_out.old_y != msg_out.new_y)
+            broadcast_message(&msg_out, game.players);
+    }
 }
 
-void on_disconnect(player_node_t* player){
-    remove_player(&game, player);
+void on_disconnect(player_node_t* player_node){
+    sc_message_t msg_out;
+    msg_out.type = FIELD_STATUS;
+    msg_out.update_type = REMOVE;
+
+    msg_out.old_x = player_node->player.x;
+    msg_out.old_y = player_node->player.y;
+    msg_out.c = player_node->player.c;
+
+    remove_player(&game, player_node);
+
+    //Inform other players that player quit
+    broadcast_message(&msg_out, game.players);
 }
 
 void broadcast_but_better(void){
@@ -39,65 +93,78 @@ void broadcast_but_better(void){
 
 void* client_thread(void* arg){
     int client_sock_fd = *(int *) arg;
-    message_t msg_in, msg_out;
     player_node_t *player_node;
 
-    while(1){
-        // //Receive message from client
+    cs_message_t msg_in;
+
+    int alive = 1;
+
+    while(alive){
+        //Receive message from client
         int err = read(client_sock_fd, &msg_in, sizeof(msg_in));
 
         if(err != sizeof(msg_in)) continue; // Ignore invalid messages
         //
-        pthread_mutex_lock(&game_mutex);
+        pthread_mutex_lock(&game_threads.game_mutex);
         if (msg_in.type == CONNECT){
-
             player_node = on_connect(&msg_in, client_sock_fd);
-            if (player_node == NULL) continue; //Unable to add player
 
-            msg_out.c = player_node->player.c;
-            msg_out.type = BALL_INFORMATION;
+            if (player_node == NULL){
+                //Check how to kill thread
+                alive = 0;
+                continue;
+            }; //Unable to add player
         }
         else if (msg_in.type == MOVE_BALL){
-            if(player_node->player.health <= 0)
-                msg_out.type = HEALTH_0;
-            else{
-                on_move_ball(player_node, msg_in.direction);
-                msg_out.type = FIELD_STATUS;
-            }
+            on_move_ball(player_node, &msg_in);
         }
+        //TODO: remove this message and replace with socket closing
         else if (msg_in.type == DISCONNECT){
             on_disconnect(player_node);
+            alive = 0;
+            continue;
+        }
+        else if (msg_in.type == CONTINUE_GAME){
+
         }
         else continue; //Ignore invalid messages
-
-        //Send response
-        memcpy(&(msg_out.game), &game, sizeof(game)); //the game state is sent regardless of message type
-        broadcast_message(&msg_out, game.players, game.n_players);
-
-        pthread_mutex_unlock(&game_mutex);
-        // write(client_sock_fd, &msg_out, sizeof(msg_out));
+        pthread_mutex_unlock(&game_threads.game_mutex);
 
         //Update windows
+        pthread_mutex_lock(&game_threads.window_mutex);
         redraw_screen(main_win, message_win, &game);
+        pthread_mutex_unlock(&game_threads.window_mutex);
     }
+    return NULL;
 }
 
 void* bot_thread(void* arg){
     int direction = -1;
+    sc_message_t msg_out;
+    msg_out.entity_type = BOT;
     while(server_alive){
         usleep(BOT_TIME_INTERVAL*1e6);
 
-        pthread_mutex_lock(&game_mutex);
+        pthread_mutex_lock(&game_threads.game_mutex);
         for(int i = 0; i < game.n_bots; i++){
+            msg_out.old_x = game.bots[i].x;
+            msg_out.old_y = game.bots[i].y;
+            
             direction = rand() % 4;
             move_and_collide(&game, game.bots + i, direction, true);
+
+            msg_out.new_x = game.bots[i].x;
+            msg_out.new_y = game.bots[i].y;
+            broadcast_message(&msg_out, game.players);
         }
 
         broadcast_but_better();
 
-        pthread_mutex_unlock(&game_mutex);
+        pthread_mutex_unlock(&game_threads.game_mutex);
 
+        pthread_mutex_lock(&game_threads.window_mutex);
         redraw_screen(main_win, message_win, &game);
+        pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
 }
@@ -106,12 +173,14 @@ void* prize_thread(void* arg){
     while(server_alive){
         usleep(PRIZE_TIME_INTERVAL*1e6);
 
-        pthread_mutex_lock(&game_mutex);
+        pthread_mutex_lock(&game_threads.game_mutex);
         place_new_prize(&game); //CHECK IF SUCCESSFUL?
         broadcast_but_better();
-        pthread_mutex_unlock(&game_mutex);
+        pthread_mutex_unlock(&game_threads.game_mutex);
 
+        pthread_mutex_lock(&game_threads.window_mutex);
         redraw_screen(main_win, message_win, &game);
+        pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
 }
@@ -119,7 +188,10 @@ void* prize_thread(void* arg){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char *argv[]){
     // ERROR CHECK
-    if(argc != 3) exit(-1);
+    if(argc != 3){
+        printf("Invalid arguments. Correct usage: ./chase-server \"server_ip\" \"server_port\"\n");
+        exit(-1);
+    }
     char* server_address = argv[1];
     int port = atoi(argv[2]);
 
@@ -132,7 +204,7 @@ int main (int argc, char *argv[]){
     struct sockaddr_in local_addr;
     init_socket(&sock_fd, &local_addr, server_address, port, false);
 
-    if(listen(sock_fd, MAX_PLAYERS) < 0){//CHECK ARGUMENT
+    if(listen(sock_fd, MAX_PLAYERS) < 0){
         perror("Error starting to listen");
         exit(-1);
     }; 
@@ -152,32 +224,29 @@ int main (int argc, char *argv[]){
 
     ///////////////////////////////////////////////
     // THREADS
-    pthread_t threads[MAX_PLAYERS];
-    pthread_mutex_init(&game_mutex, NULL);
-    pthread_mutex_init(&window_mutex, NULL);
+    init_threads(&game_threads);
 
-    pthread_t bot_thread_id;
-    pthread_create(&bot_thread_id, NULL, &bot_thread, &client_sock_fd);
-
-    pthread_t prize_thread_id;
-    pthread_create(&prize_thread_id, NULL, &prize_thread, &client_sock_fd);
+    pthread_create(&game_threads.bot_thread_id, NULL, &bot_thread, &client_sock_fd);
+    pthread_create(&game_threads.prize_thread_id, NULL, &prize_thread, &client_sock_fd);
 
     while(server_alive){
         client_sock_fd = accept(sock_fd, (struct sockaddr*)&client_addr, &client_addr_size);
-        if (client_sock_fd == -1){
-            exit(-1);
+        if (client_sock_fd < 0){
+            perror("Error accepting socket\n");
+            continue;
         }
 
         mvwprintw(message_win, 4,1, "Accepted %s", inet_ntoa(client_addr.sin_addr));
         wrefresh(message_win);	
 
-        pthread_create(threads, NULL, &client_thread, &client_sock_fd);
+        clear_dead_threads(&game_threads);
+        new_player_thread(&game_threads, client_thread, (void*) &client_sock_fd);
     }
     printf("Killed server\n");
-
-    pthread_join(bot_thread_id, NULL);
-    pthread_join(prize_thread_id, NULL);
-    pthread_join(*threads, NULL);
+    //
+    // pthread_join(bot_thread_id, NULL);
+    // pthread_join(prize_thread_id, NULL);
+    // pthread_join(*threads, NULL);
 
     //This code is never executed
     endwin();

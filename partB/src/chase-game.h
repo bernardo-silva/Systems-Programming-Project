@@ -49,11 +49,11 @@ void init_players(game_t* game);
 
 player_node_t* new_player(game_t *game, int sock_fd);
 void remove_player(game_t* game, player_node_t* player);
-int find_player_slot(game_t* game);
+// int find_player_slot(game_t* game);
 
 void init_bots(game_t* game, int n_bots);
 
-int is_empty(game_t* game, int x, int y);
+int  is_empty(game_t* game, int x, int y);
 void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot);
 
 void init_prizes(game_t * game, int n_prizes);

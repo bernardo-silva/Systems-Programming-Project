@@ -1,4 +1,4 @@
-#include "chase-game.h"
+#include "chase-game.h" 
 #include "chase-board.h"
 #include <stdlib.h>
 #include <ncurses.h>
@@ -104,8 +104,8 @@ void remove_player(game_t *game, player_node_t* player){ //Should be double poin
 }
 
 void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot){
-    player_t * bots    = game->bots;
-    prize_t  * prizes  = game->prizes;
+    player_t *bots    = game->bots;
+    prize_t  *prizes  = game->prizes;
 
     int new_x = p->x;
     int new_y = p->y;
@@ -177,8 +177,8 @@ void place_new_prize(game_t* game){
 
     for (int i=0; i<MAX_PRIZES; i++){
         if (game->prizes[i].value == 0){
-            x = 1+rand()%(WINDOW_SIZE-2);
-            y = 1+rand()%(WINDOW_SIZE-2);
+            x = 1 + rand()%(WINDOW_SIZE-2);
+            y = 1 + rand()%(WINDOW_SIZE-2);
             if(is_empty(game, x, y)){
                 game->prizes[i].x = x;
                 game->prizes[i].y = y;

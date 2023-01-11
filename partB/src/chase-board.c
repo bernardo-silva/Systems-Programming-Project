@@ -47,13 +47,6 @@ void draw_board(WINDOW* win, game_t* game){
     }
 }
 
-void clear_windows(WINDOW* main_win, WINDOW* message_win){
-        werase(main_win);
-        box(main_win, 0 , 0);	
-        werase(message_win);
-        box(message_win, 0 , 0);
-}
-
 void draw_player(WINDOW *win, player_t *player, int clear_char){
     int ch;
     if(!clear_char){
@@ -71,6 +64,13 @@ void show_players_health(WINDOW* win, player_node_t* players, int start_line){
     player_node_t* current;
     for(current = players; current != NULL; current = current->next)
         mvwprintw(win, start_line++,1,"%c: %d HP", current->player.c, current->player.health);
+}
+
+void clear_windows(WINDOW* main_win, WINDOW* message_win){
+        werase(main_win);
+        box(main_win, 0 , 0);	
+        werase(message_win);
+        box(message_win, 0 , 0);
 }
 
 void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game){
