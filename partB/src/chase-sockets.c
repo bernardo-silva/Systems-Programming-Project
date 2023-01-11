@@ -42,14 +42,3 @@ void broadcast_message(message_t* msg, player_t* players, int n_players){
         if(++n_sent >= n_players) break;
     }
 }
-
-
-// char get_player_char(player_t * players, struct sockaddr_in my_address){
-//     for(int i=0; i<10; i++){
-//         if( !strcmp(players[i].client_addr.sun_path ,my_address.sun_path))
-//     //         return players[i].c;
-//     // }
-// //
-// //     return '\0';
-// // }
-//

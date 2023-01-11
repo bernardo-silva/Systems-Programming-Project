@@ -2,6 +2,7 @@
 #define CHASE_GAME
 
 #include <time.h>
+#include <wchar.h>
 #define MIN(a,b) ((a>b)?b:a)
 
 #define WINDOW_SIZE 20
@@ -23,13 +24,18 @@ typedef struct player_t{
     int sock_fd;
 } player_t;
 
+typedef struct player_node_t{
+    player_t player;
+    struct player_node_t *next;
+} player_node_t;
+
 typedef struct prize_t{
     int x, y;
     unsigned int value;
 } prize_t;
 
 typedef struct game_t{
-    player_t players[MAX_PLAYERS]; 
+    player_node_t *players;
     player_t bots[MAX_BOTS];
     prize_t  prizes[MAX_PRIZES];
     int n_players;
@@ -38,16 +44,18 @@ typedef struct game_t{
 } game_t;
 
 
+void new_game(game_t* game, int n_bots, int n_prizes);
 void init_players(game_t* game);
-int new_player(game_t *game, int sock_fd);
-void remove_player(game_t* game, int idx);
+
+player_node_t* new_player(game_t *game, int sock_fd);
+void remove_player(game_t* game, player_node_t* player);
 int find_player_slot(game_t* game);
 
-void init_bots(game_t* game);
+void init_bots(game_t* game, int n_bots);
 
 int is_empty(game_t* game, int x, int y);
 void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot);
 
-void init_prizes(game_t * game);
+void init_prizes(game_t * game, int n_prizes);
 void place_new_prize(game_t * game);
 #endif

@@ -15,33 +15,32 @@ void kill_server(int sig){
     server_alive = 0;
 }
 
-int on_connect(message_t* msg, int sock_fd){
+player_node_t* on_connect(message_t* msg, int sock_fd){
     // Player connecting
-    int player_idx = new_player(&game, sock_fd);
+    player_node_t *player_node = new_player(&game, sock_fd);
 
-    return player_idx;
+    return player_node;
 }
 
-void on_move_ball(int idx, direction_t direction){
-    player_t* p = game.players + idx;
-    move_and_collide(&game, p, direction, false);
+void on_move_ball(player_node_t *player_node, direction_t direction){
+    move_and_collide(&game, &player_node->player, direction, false);
 }
 
-void on_disconnect(int idx){
-    remove_player(&game, idx);
+void on_disconnect(player_node_t* player){
+    remove_player(&game, player);
 }
 
 void broadcast_but_better(void){
-    message_t msg_out;
-    msg_out.type = FIELD_STATUS;
-    memcpy(&(msg_out.game), &game, sizeof(game));
-    broadcast_message(&msg_out, game.players, game.n_players);
+    // message_t msg_out;
+    // msg_out.type = FIELD_STATUS;
+    // memcpy(&(msg_out.game), &game, sizeof(game));
+    // broadcast_message(&msg_out, game.players, game.n_players);
 }
 
 void* client_thread(void* arg){
     int client_sock_fd = *(int *) arg;
     message_t msg_in, msg_out;
-    int idx = -1;
+    player_node_t *player_node;
 
     while(1){
         // //Receive message from client
@@ -52,22 +51,22 @@ void* client_thread(void* arg){
         pthread_mutex_lock(&game_mutex);
         if (msg_in.type == CONNECT){
 
-            idx = on_connect(&msg_in, client_sock_fd);
-            if (idx == -1) continue; //Unable to add player
+            player_node = on_connect(&msg_in, client_sock_fd);
+            if (player_node == NULL) continue; //Unable to add player
 
-            msg_out.c = game.players[idx].c;
+            msg_out.c = player_node->player.c;
             msg_out.type = BALL_INFORMATION;
         }
         else if (msg_in.type == MOVE_BALL){
-            if(game.players[idx].health <= 0)
+            if(player_node->player.health <= 0)
                 msg_out.type = HEALTH_0;
             else{
-                on_move_ball(idx, msg_in.direction);
+                on_move_ball(player_node, msg_in.direction);
                 msg_out.type = FIELD_STATUS;
             }
         }
         else if (msg_in.type == DISCONNECT){
-            on_disconnect(idx);
+            on_disconnect(player_node);
         }
         else continue; //Ignore invalid messages
 
@@ -148,15 +147,7 @@ int main (int argc, char *argv[]){
 
     ///////////////////////////////////////////////
     // GAME
-    game.n_players = 0;
-    init_players(&game);
-
-    game.n_bots = MAX_BOTS;
-    init_bots(&game);
-
-    game.n_prizes = INITIAL_PRIZES;
-    init_prizes(&game);
-
+    new_game(&game, MAX_BOTS, INITIAL_PRIZES);
     redraw_screen(main_win, message_win, &game);
 
     ///////////////////////////////////////////////

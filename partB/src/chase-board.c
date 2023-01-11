@@ -1,7 +1,9 @@
 #include "chase-board.h"
 #include "chase-game.h"
+#include <locale.h>
 
 void init_windows(WINDOW** main_win, WINDOW** message_win){
+    setlocale(LC_CTYPE, "");
     // main window
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
@@ -38,11 +40,10 @@ void draw_board(WINDOW* win, game_t* game){
             waddch(win, game->bots[i].c | COLOR_PAIR(COLOR_BOT));
         }
     }
-    for(int i=0; i<10; i++){
-        if(game->players[i].c != 0){
-            wmove(win, game->players[i].y, game->players[i].x);
-            waddch(win, game->players[i].c | COLOR_PAIR(COLOR_PLAYER));
-        }
+    player_node_t* current;
+    for(current = game->players; current != NULL; current = current->next){
+        wmove(win, current->player.y, current->player.x);
+        waddch(win, current->player.c | COLOR_PAIR(COLOR_PLAYER));
     }
 }
 
@@ -66,11 +67,10 @@ void draw_player(WINDOW *win, player_t *player, int clear_char){
     waddch(win,ch);
 }
 
-void show_players_health(WINDOW* win, player_t* players, int start_line){
-    for(int i = 0; i < 10; i++){
-        if(players[i].c != 0) 
-        mvwprintw(win, start_line++,1,"%c: %d HP", players[i].c, players[i].health);
-    }
+void show_players_health(WINDOW* win, player_node_t* players, int start_line){
+    player_node_t* current;
+    for(current = players; current != NULL; current = current->next)
+        mvwprintw(win, start_line++,1,"%c: %d HP", current->player.c, current->player.health);
 }
 
 void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game){
