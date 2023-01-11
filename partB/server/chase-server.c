@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 game_t game;
-WINDOW *message_win, *main_win;
+WINDOW *message_win, *main_win, *debug_win;
 game_threads_t game_threads;
 
 volatile sig_atomic_t server_alive = 1;
@@ -20,7 +20,7 @@ void kill_server(int sig){
 
 player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     // Player connecting
-    player_node_t* player_node = new_player(&game, sock_fd);
+    player_node_t* player_node = create_player(&game, sock_fd);
     if (player_node == NULL) return NULL; //Unable to add player
 
     sc_message_t msg_out;
@@ -28,14 +28,18 @@ player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     //Inform other players of a new player
     msg_out.type = FIELD_STATUS;
     msg_out.update_type = NEW;
+    msg_out.entity_type = PLAYER;
+
+    msg_out.c = player_node->player.c;
+    msg_out.health = player_node->player.health;
     msg_out.new_x = player_node->player.x;
     msg_out.new_y = player_node->player.y;
-    msg_out.new_y = player_node->player.health;
 
-    broadcast_message(&msg_out, game.players);
-
+    // Inform players of a new player
+    broadcast_message(&msg_out, game.players->next);
 
     // Inform player of field status
+    send_field(&game, sock_fd);
 
     // Inform player of successful connection
     msg_out.type = BALL_INFORMATION;
@@ -54,7 +58,9 @@ void on_move_ball(player_node_t *player_node, cs_message_t *msg_in){
     else{
         msg_out.type = FIELD_STATUS;
         msg_out.update_type = MOVE;
+        msg_out.entity_type = PLAYER;
 
+        msg_out.c = player_node->player.c;
         msg_out.old_x = player_node->player.x;
         msg_out.old_y = player_node->player.y;
 
@@ -63,7 +69,10 @@ void on_move_ball(player_node_t *player_node, cs_message_t *msg_in){
         msg_out.new_x = player_node->player.x;
         msg_out.new_y = player_node->player.y;
 
-        //Onlu broadcast if position changed
+
+        mvwprintw(debug_win, 1,1, "B %c %d %d", msg_out.c, msg_out.type, msg_out.update_type);
+        wrefresh(debug_win);	
+        //Only broadcast if position changed
         if(msg_out.old_x !=  msg_out.new_x || msg_out.old_y != msg_out.new_y)
             broadcast_message(&msg_out, game.players);
     }
@@ -141,7 +150,11 @@ void* client_thread(void* arg){
 void* bot_thread(void* arg){
     int direction = -1;
     sc_message_t msg_out;
+
+    msg_out.type = FIELD_STATUS;
+    msg_out.update_type = MOVE;
     msg_out.entity_type = BOT;
+
     while(server_alive){
         usleep(BOT_TIME_INTERVAL*1e6);
 
@@ -158,7 +171,7 @@ void* bot_thread(void* arg){
             broadcast_message(&msg_out, game.players);
         }
 
-        broadcast_but_better();
+        // broadcast_but_better();
 
         pthread_mutex_unlock(&game_threads.game_mutex);
 
@@ -170,12 +183,27 @@ void* bot_thread(void* arg){
 }
 
 void* prize_thread(void* arg){
+    sc_message_t msg_out;
+    int prize_idx = 0;
+
+    msg_out.type = FIELD_STATUS;
+    msg_out.update_type = NEW;
+    msg_out.entity_type = PRIZE;
+
     while(server_alive){
         usleep(PRIZE_TIME_INTERVAL*1e6);
 
         pthread_mutex_lock(&game_threads.game_mutex);
-        place_new_prize(&game); //CHECK IF SUCCESSFUL?
-        broadcast_but_better();
+
+        prize_idx = place_new_prize(&game);
+
+
+        msg_out.health = game.prizes[prize_idx].value;
+        msg_out.new_x = game.prizes[prize_idx].x;
+        msg_out.new_y = game.prizes[prize_idx].y;
+
+        if(prize_idx >= 0)
+            broadcast_message(&msg_out, game.players);
         pthread_mutex_unlock(&game_threads.game_mutex);
 
         pthread_mutex_lock(&game_threads.window_mutex);
@@ -216,6 +244,9 @@ int main (int argc, char *argv[]){
     ///////////////////////////////////////////////
     // WINDOW CREATION
     init_windows(&main_win, &message_win);
+    debug_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE+12, 0);
+    box(debug_win, 0 , 0);	
+    wrefresh(debug_win);
 
     ///////////////////////////////////////////////
     // GAME

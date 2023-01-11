@@ -28,18 +28,20 @@ void init_windows(WINDOW** main_win, WINDOW** message_win){
 }
 
 void draw_board(WINDOW* win, game_t* game){
-    for(int i=0; i<10; i++){
+    for(int i=0; i<MAX_PRIZES; i++){
         if(game->prizes[i].value != 0){
             wmove(win, game->prizes[i].y, game->prizes[i].x);
             waddch(win, (game->prizes[i].value + 48) | COLOR_PAIR(COLOR_PRIZE));
         }
     }
-    for(int i=0; i<10; i++){
+
+    for(int i=0; i<MAX_BOTS; i++){
         if(game->bots[i].c != 0){
             wmove(win, game->bots[i].y, game->bots[i].x);
             waddch(win, game->bots[i].c | COLOR_PAIR(COLOR_BOT));
         }
     }
+
     player_node_t* current;
     for(current = game->players; current != NULL; current = current->next){
         wmove(win, current->player.y, current->player.x);
@@ -63,14 +65,14 @@ void draw_player(WINDOW *win, player_t *player, int clear_char){
 void show_players_health(WINDOW* win, player_node_t* players, int start_line){
     player_node_t* current;
     for(current = players; current != NULL; current = current->next)
-        mvwprintw(win, start_line++,1,"%c: %d HP", current->player.c, current->player.health);
+        mvwprintw(win, start_line++, 1,"%c: %d HP", current->player.c, current->player.health);
 }
 
 void clear_windows(WINDOW* main_win, WINDOW* message_win){
-        werase(main_win);
-        box(main_win, 0 , 0);	
-        werase(message_win);
-        box(message_win, 0 , 0);
+    werase(main_win);
+    box(main_win, 0 , 0);	
+    werase(message_win);
+    box(message_win, 0 , 0);
 }
 
 void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game){

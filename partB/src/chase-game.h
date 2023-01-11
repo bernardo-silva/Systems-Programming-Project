@@ -11,7 +11,7 @@
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10
 #define INITIAL_PRIZES 5
-#define BOT_TIME_INTERVAL 0.3
+#define BOT_TIME_INTERVAL 3
 #define PRIZE_TIME_INTERVAL 3
 
 
@@ -47,15 +47,21 @@ typedef struct game_t{
 void new_game(game_t* game, int n_bots, int n_prizes);
 void init_players(game_t* game);
 
-player_node_t* new_player(game_t *game, int sock_fd);
+player_node_t* create_player(game_t *game, int sock_fd);
+void insert_player(game_t *game, int c, int x, int y, int health);
 void remove_player(game_t* game, player_node_t* player);
+
+void move_player(game_t *game, char c, int new_x, int new_y);
 // int find_player_slot(game_t* game);
 
 void init_bots(game_t* game, int n_bots);
+void insert_bot(game_t* game, int x, int y);
+void move_bot(game_t* game, int old_x, int old_y, int new_x, int new_y);
+
+void init_prizes(game_t * game, int n_prizes);
+int place_new_prize(game_t * game);
+void insert_prize(game_t* game, int x, int y, int value);
 
 int  is_empty(game_t* game, int x, int y);
 void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot);
-
-void init_prizes(game_t * game, int n_prizes);
-void place_new_prize(game_t * game);
 #endif

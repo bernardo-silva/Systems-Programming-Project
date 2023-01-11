@@ -19,14 +19,14 @@ void init_players(game_t * game){
     // }
 }
 
-player_node_t* new_player(game_t *game, int sock_fd){
+player_node_t* create_player(game_t *game, int sock_fd){
     //Insert player at the beggining of the list
     if(game->n_players >= MAX_PLAYERS) return NULL;
     char player_char = 'A' + game->n_players;
     game->n_players++;
 
     player_t new_player = {WINDOW_SIZE / 2, WINDOW_SIZE / 2, 
-                            player_char, MAX_HEALTH, -1};
+                            player_char, MAX_HEALTH, sock_fd};
 
     player_node_t *new_player_element = (player_node_t*) malloc(sizeof(player_node_t));
 
@@ -36,6 +36,46 @@ player_node_t* new_player(game_t *game, int sock_fd){
     game->players = new_player_element;
 
     return new_player_element;
+}
+
+void insert_player(game_t *game, int c, int x, int y, int health){
+    //Insert player at the beggining of the list
+    player_t new_player = {x, y, c, health, -1};
+
+    player_node_t *new_player_element = (player_node_t*) malloc(sizeof(player_node_t));
+
+    new_player_element->player = new_player;
+    new_player_element->next = game->players; 
+
+    game->players = new_player_element;
+}
+
+void move_player(game_t *game, char c, int new_x, int new_y){
+    player_node_t* current;
+    for(current = game->players; current != NULL; current = current->next){
+        if(current->player.c == c) break;
+    }
+
+    if(current == NULL) return; // Node not found
+
+    current->player.x = new_x;
+    current->player.y = new_y;
+}
+
+void remove_player(game_t *game, player_node_t* player){ //Should be double pointer?
+    player_node_t** current = &game->players;
+    player_node_t* delete;
+
+    while(*current && *current != player){
+        current = &(*current)->next;
+    }
+    if(current == NULL) return; // Node not found
+
+    delete = *current;
+    *current = delete->next;
+    free(delete);
+
+    game->n_players--;
 }
 
 void init_bots(game_t* game, int n_bots){
@@ -54,6 +94,75 @@ void init_bots(game_t* game, int n_bots){
             game->bots[i].y = y;
         }
         else i--;
+    }
+    for(int i=game->n_bots; i<MAX_BOTS; i++){
+        game->bots[i].c = '\0';
+    }
+}
+
+void insert_bot(game_t* game, int x, int y){
+    for(int i=0; i<MAX_BOTS; i++){
+        if(game->bots[i].c == '\0'){
+            game->bots[i].c = '*';
+            game->bots[i].x = x;
+            game->bots[i].y = y;
+            game->n_bots++;
+            return;
+        }
+    }
+}
+
+void move_bot(game_t* game, int old_x, int old_y, int new_x, int new_y){
+    for(int i=0; i<game->n_bots; i++){
+        if(game->bots[i].x == old_x && game->bots[i].y == old_y){
+            game->bots[i].x = new_x;
+            game->bots[i].y = new_y;
+            return;
+        }
+    }
+}
+
+void init_prizes(game_t* game, int n_prizes){
+    for (int i=0; i<MAX_PRIZES; i++){
+        game->prizes[i].value = 0;
+    }
+
+    for (int i=0; i<n_prizes; i++){
+        place_new_prize(game);
+    }
+}
+
+int place_new_prize(game_t* game){
+    int x, y;
+    int i;
+    if(game->n_prizes >= MAX_PRIZES) return -1;
+
+    for (i=0; i<MAX_PRIZES; i++){
+        if (game->prizes[i].value == 0){
+            do {
+                x = 1 + rand()%(WINDOW_SIZE-2);
+                y = 1 + rand()%(WINDOW_SIZE-2);
+            }while (!is_empty(game, x, y));
+
+            game->prizes[i].x = x;
+            game->prizes[i].y = y;
+            game->prizes[i].value = 1+rand()%5;
+            game->n_prizes++;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void insert_prize(game_t* game, int x, int y, int value){
+    for(int i=0; i<MAX_PRIZES; i++){
+        if(game->prizes[i].value == 0){
+            game->prizes[i].value = value;
+            game->prizes[i].x = x;
+            game->prizes[i].y = y;
+            game->n_prizes++;
+            return;
+        }
     }
 }
 
@@ -74,33 +183,7 @@ int is_empty(game_t* game, int x, int y){
             game->prizes[j].y == y &&
             game->prizes[j].value > 0) return false;
     }
-
     return true;
-}
-
-// int find_player_slot(game_t* game){
-//     for (int i=0; i<MAX_PLAYERS; i++) {
-//         if(game->players[i].c == '\0')
-//             return i;
-//     }
-//     return -1;
-// }
-
-
-void remove_player(game_t *game, player_node_t* player){ //Should be double pointer?
-    player_node_t** current = &game->players;
-    player_node_t* delete;
-
-    while(*current && *current != player){
-        current = &(*current)->next;
-    }
-    if(current == NULL) return; // Node not found
-
-    delete = *current;
-    *current = delete->next;
-    free(delete);
-
-    game->n_players--;
 }
 
 void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot){
@@ -157,38 +240,4 @@ void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot){
     p->x = new_x;
     p->y = new_y;
     return;
-}
-
-void init_prizes(game_t* game, int n_prizes){
-    game->n_prizes = n_prizes;
-
-    for (int i=0; i<MAX_PRIZES; i++){
-        game->prizes[i].value = 0;
-    }
-    for (int i=0; i<game->n_prizes; i++){
-        place_new_prize(game);
-    }
-    game->n_prizes = INITIAL_PRIZES;
-}
-
-void place_new_prize(game_t* game){
-    int x, y;
-    if(game->n_prizes >= MAX_PRIZES) return;
-
-    for (int i=0; i<MAX_PRIZES; i++){
-        if (game->prizes[i].value == 0){
-            x = 1 + rand()%(WINDOW_SIZE-2);
-            y = 1 + rand()%(WINDOW_SIZE-2);
-            if(is_empty(game, x, y)){
-                game->prizes[i].x = x;
-                game->prizes[i].y = y;
-                game->prizes[i].value = 1+rand()%5;
-            }else{
-                i--;
-                continue;
-            }
-            break;
-        }
-    }
-    game->n_prizes++;
 }

@@ -85,7 +85,7 @@ typedef struct server_client_message{
 
 void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int client_flag);
 void init_client(client_t* c, int sockfd, player_t* player);
-// void remove_client(client_t* c);
-// void broadcast_message(message_t* msg, player_t* players, int n_players);
 void broadcast_message(sc_message_t* msg, player_node_t* players);
+void send_field(game_t *game, int sock_fd);
+
 #endif // !CHASE-SOCKET
