@@ -50,7 +50,7 @@ typedef enum sc_message_type{
 
 typedef enum update_type{
     NEW,
-    MOVE,
+    UPDATE,
     REMOVE
 } update_type_t;
 
@@ -58,6 +58,7 @@ typedef enum entity_type{
     PLAYER,
     BOT,
     PRIZE,
+    NONE,
 } entity_type_t;
 
 // typedef struct message{

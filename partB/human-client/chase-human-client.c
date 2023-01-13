@@ -22,28 +22,25 @@ void on_field_status(sc_message_t* msg){
             insert_bot(&game, msg->new_x, msg->new_y);
         else if(msg->entity_type == PRIZE)
             insert_prize(&game, msg->new_x, msg->new_y, msg->health);
-
-        pthread_mutex_lock(&window_mutex);
-        redraw_screen(main_win, message_win, &game);
-        pthread_mutex_unlock(&window_mutex);
     }
-    else if(msg->update_type == MOVE){
+
+    else if(msg->update_type == UPDATE){
         if(msg->entity_type == PLAYER)
-            move_player(&game, msg->c, msg->new_x, msg->new_y);
-        else if(msg->entity_type == BOT){
-            mvwprintw(debug_win, 2,1,"M V %d %d - %d %d", msg->old_x, msg->old_y, msg->new_x, msg->new_y);
-            wrefresh(debug_win);
-            move_bot(&game, msg->old_x, msg->old_y, msg->new_x, msg->new_y);
-        }
-        else if(msg->entity_type == PRIZE)
-            return;
+            update_player(&game, msg->c, msg->health, msg->new_x, msg->new_y);
+        else if(msg->entity_type == BOT)
+            change_bot_position(&game, msg->old_x, msg->old_y, msg->new_x, msg->new_y);
+    }
 
-        pthread_mutex_lock(&window_mutex);
-        redraw_screen(main_win, message_win, &game);
-        pthread_mutex_unlock(&window_mutex);
-    }
     else if(msg->update_type == REMOVE){
+        if(msg->entity_type == PLAYER)
+            remove_player_by_char(&game, msg->c);
+        else if(msg->entity_type == PRIZE)
+            remove_prize(&game, msg->old_x, msg->old_y, msg->health);
     }
+
+    pthread_mutex_lock(&window_mutex);
+    redraw_screen(main_win, message_win, &game);
+    pthread_mutex_unlock(&window_mutex);
 }
 
 void* read_key_thread(void* arg){
@@ -53,9 +50,9 @@ void* read_key_thread(void* arg){
     int key = -1;
 
     while(key != 27 && key != 'q'){
-        pthread_mutex_lock(&window_mutex);
+        // pthread_mutex_lock(&window_mutex);
         key = wgetch(main_win);
-        pthread_mutex_unlock(&window_mutex);
+        // pthread_mutex_unlock(&window_mutex);
         if ((msg_out.direction = key2dir(key)) != -1){
             msg_out.type = MOVE_BALL;
             write(sock_fd, &msg_out, sizeof(msg_out));
@@ -158,7 +155,7 @@ int main(int argc, char* argv[]){
     debug_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE+12, 0);
     box(debug_win, 0 , 0);	
     wrefresh(debug_win);
-    nodelay(main_win, true); // non blocking wgetch()
+    // nodelay(main_win, true); // non blocking wgetch()
 
     ///////////////////////////////////////////////
     // GAME
@@ -167,7 +164,6 @@ int main(int argc, char* argv[]){
     ///////////////////////////////////////////////
     // CONNECTION
     cs_message_t msg_out;
-    sc_message_t msg_in;
 
     //Send CONNECT message
     msg_out.type = CONNECT;
@@ -183,7 +179,7 @@ int main(int argc, char* argv[]){
     // msg_out.type = DISCONNECT;
     // write(sock_fd, &msg_out, sizeof(msg_out));
     
-    pthread_join(read_key_thread_id, NULL);
+    // pthread_join(read_key_thread_id, NULL);
 
     close(sock_fd);
     endwin();

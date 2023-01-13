@@ -50,31 +50,34 @@ player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
 }
 
 void on_move_ball(player_node_t *player_node, cs_message_t *msg_in){
-    sc_message_t msg_out;
+    sc_message_t msg_out_self, msg_out_other;
 
+    // Isto pode acontecer?
     if(player_node->player.health <= 0)
         // TODO
-        msg_out.type = HEALTH_0;
+        msg_out_self.type = HEALTH_0;
     else{
-        msg_out.type = FIELD_STATUS;
-        msg_out.update_type = MOVE;
-        msg_out.entity_type = PLAYER;
+        //Check if self(player) changed (position and/or health)
+        if(move_player(&game, &player_node->player, msg_in->direction, &msg_out_other)){
+            msg_out_self.type = FIELD_STATUS;
+            msg_out_self.update_type = UPDATE;
+            msg_out_self.entity_type = PLAYER;
 
-        msg_out.c = player_node->player.c;
-        msg_out.old_x = player_node->player.x;
-        msg_out.old_y = player_node->player.y;
+            msg_out_self.c     = player_node->player.c;
+            msg_out_self.new_x = player_node->player.x;
+            msg_out_self.new_y = player_node->player.y;
+            msg_out_self.health = player_node->player.health;
 
-        move_and_collide(&game, &player_node->player, msg_in->direction, false);
+            broadcast_message(&msg_out_self, game.players);
+        }
 
-        msg_out.new_x = player_node->player.x;
-        msg_out.new_y = player_node->player.y;
-
-
-        mvwprintw(debug_win, 1,1, "B %c %d %d", msg_out.c, msg_out.type, msg_out.update_type);
-        wrefresh(debug_win);	
+        //Check if another entity(player/prize) was altered
+        if(msg_out_other.entity_type != NONE){
+            broadcast_message(&msg_out_other, game.players);
+        }
+        // mvwprintw(debug_win, 1,1, "B %c %d %d", msg_out.c, msg_out.type, msg_out.update_type);
+        // wrefresh(debug_win);	
         //Only broadcast if position changed
-        if(msg_out.old_x !=  msg_out.new_x || msg_out.old_y != msg_out.new_y)
-            broadcast_message(&msg_out, game.players);
     }
 }
 
@@ -149,30 +152,30 @@ void* client_thread(void* arg){
 
 void* bot_thread(void* arg){
     int direction = -1;
-    sc_message_t msg_out;
+    sc_message_t msg_out_self, msg_out_other;
 
-    msg_out.type = FIELD_STATUS;
-    msg_out.update_type = MOVE;
-    msg_out.entity_type = BOT;
+    msg_out_self.type = FIELD_STATUS;
+    msg_out_self.update_type = UPDATE;
+    msg_out_self.entity_type = BOT;
 
     while(server_alive){
         usleep(BOT_TIME_INTERVAL*1e6);
 
         pthread_mutex_lock(&game_threads.game_mutex);
         for(int i = 0; i < game.n_bots; i++){
-            msg_out.old_x = game.bots[i].x;
-            msg_out.old_y = game.bots[i].y;
+            msg_out_self.old_x = game.bots[i].x;
+            msg_out_self.old_y = game.bots[i].y;
             
             direction = rand() % 4;
-            move_and_collide(&game, game.bots + i, direction, true);
-
-            msg_out.new_x = game.bots[i].x;
-            msg_out.new_y = game.bots[i].y;
-            broadcast_message(&msg_out, game.players);
+            //Check if bot moved and broadcast new message
+            if(move_bot(&game, game.bots + i, direction, &msg_out_other)){
+                msg_out_self.new_x = game.bots[i].x;
+                msg_out_self.new_y = game.bots[i].y;
+                broadcast_message(&msg_out_self, game.players);
+            }
+            if(msg_out_other.entity_type != NONE)
+                broadcast_message(&msg_out_other, game.players);
         }
-
-        // broadcast_but_better();
-
         pthread_mutex_unlock(&game_threads.game_mutex);
 
         pthread_mutex_lock(&game_threads.window_mutex);

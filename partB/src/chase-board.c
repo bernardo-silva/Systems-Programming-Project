@@ -35,11 +35,9 @@ void draw_board(WINDOW* win, game_t* game){
         }
     }
 
-    for(int i=0; i<MAX_BOTS; i++){
-        if(game->bots[i].c != 0){
-            wmove(win, game->bots[i].y, game->bots[i].x);
-            waddch(win, game->bots[i].c | COLOR_PAIR(COLOR_BOT));
-        }
+    for(int i=0; i<game->n_bots; i++){
+        wmove(win, game->bots[i].y, game->bots[i].x);
+        waddch(win, game->bots[i].c | COLOR_PAIR(COLOR_BOT));
     }
 
     player_node_t* current;

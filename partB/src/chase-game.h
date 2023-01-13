@@ -2,7 +2,6 @@
 #define CHASE_GAME
 
 #include <time.h>
-#include <wchar.h>
 #define MIN(a,b) ((a>b)?b:a)
 
 #define WINDOW_SIZE 20
@@ -11,16 +10,18 @@
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10
 #define INITIAL_PRIZES 5
-#define BOT_TIME_INTERVAL 3
+#define BOT_TIME_INTERVAL 0.2
 #define PRIZE_TIME_INTERVAL 3
+
+typedef struct server_client_message sc_message_t;
 
 
 typedef enum direction_t{UP, DOWN, LEFT, RIGHT} direction_t;
 
 typedef struct player_t{
-    int x, y;
     char c;
     unsigned int health;
+    int x, y;
     int sock_fd;
 } player_t;
 
@@ -50,18 +51,21 @@ void init_players(game_t* game);
 player_node_t* create_player(game_t *game, int sock_fd);
 void insert_player(game_t *game, int c, int x, int y, int health);
 void remove_player(game_t* game, player_node_t* player);
+void remove_player_by_char(game_t* game, char c);
 
-void move_player(game_t *game, char c, int new_x, int new_y);
+void update_player(game_t *game, char c, int new_health, int new_x, int new_y);
 // int find_player_slot(game_t* game);
 
 void init_bots(game_t* game, int n_bots);
 void insert_bot(game_t* game, int x, int y);
-void move_bot(game_t* game, int old_x, int old_y, int new_x, int new_y);
+void change_bot_position(game_t* game, int old_x, int old_y, int new_x, int new_y);
 
 void init_prizes(game_t * game, int n_prizes);
 int place_new_prize(game_t * game);
 void insert_prize(game_t* game, int x, int y, int value);
+void remove_prize(game_t* game, int x, int y, int value);
 
 int  is_empty(game_t* game, int x, int y);
-void move_and_collide(game_t* game, player_t* p, direction_t dir, int is_bot);
+int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_other);
+int move_bot(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_other);
 #endif
