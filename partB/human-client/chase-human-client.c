@@ -13,6 +13,7 @@ WINDOW *debug_win;
 pthread_t read_key_thread_id;
 pthread_mutex_t game_mutex, window_mutex;
 int alive = true;
+int game_over = false;
 
 void on_field_status(sc_message_t* msg){
     if(msg->update_type == NEW){
@@ -43,6 +44,20 @@ void on_field_status(sc_message_t* msg){
     pthread_mutex_unlock(&window_mutex);
 }
 
+void on_health_0(sc_message_t* msg){
+    game_over = true;
+    mvwprintw(debug_win, 1,1,"Received H0");
+    wrefresh(debug_win);
+
+    pthread_mutex_lock(&window_mutex);
+    werase(message_win);
+    box(message_win, 0 , 0);
+    mvwprintw(message_win, 1,1,"You have perished");
+    mvwprintw(message_win, 2,1,"Press 'q' to quit");
+    mvwprintw(message_win, 3,1,"Press key to respawn");
+    pthread_mutex_unlock(&window_mutex);
+}
+
 void* read_key_thread(void* arg){
     int sock_fd = *(int *) arg;
 
@@ -50,10 +65,13 @@ void* read_key_thread(void* arg){
     int key = -1;
 
     while(key != 27 && key != 'q'){
-        // pthread_mutex_lock(&window_mutex);
         key = wgetch(main_win);
-        // pthread_mutex_unlock(&window_mutex);
-        if ((msg_out.direction = key2dir(key)) != -1){
+        if(game_over){
+            msg_out.type = CONTINUE_GAME;
+            write(sock_fd, &msg_out, sizeof(msg_out));
+            game_over = false;
+        }
+        else if ((msg_out.direction = key2dir(key)) != -1){
             msg_out.type = MOVE_BALL;
             write(sock_fd, &msg_out, sizeof(msg_out));
         }
@@ -68,7 +86,7 @@ void* receiving_thread(void* arg){
 
     sc_message_t msg_in;
     // cs_message_t msg_out;
-    // 
+
     char my_c = '\0';
     int counter = 0;
 
@@ -85,8 +103,12 @@ void* receiving_thread(void* arg){
         if(N_bytes_read < 0){
             break;
         }
+        // usleep(16666);
+        // mvwprintw(message_win, 1,1,"Tick: %3d", counter++);
+        // wrefresh(message_win);
 
         if(N_bytes_read != sizeof(msg_in)) continue; // If there is a valid message
+
         pthread_mutex_lock(&game_mutex);
         switch (msg_in.type){
             case BALL_INFORMATION:
@@ -97,8 +119,10 @@ void* receiving_thread(void* arg){
             case FIELD_STATUS:
                 on_field_status(&msg_in);
                 break;
-            // case HEALTH_0:
-            //     // memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+            case HEALTH_0:
+                on_health_0(&msg_in);
+                break;
+
             //
             //     // death screen
             //     // clear_windows(main_win, message_win);
@@ -115,9 +139,10 @@ void* receiving_thread(void* arg){
             default:
                 perror("Error: unknown message type received");
                 exit(-1);
-        pthread_mutex_unlock(&game_mutex);
         }
+        pthread_mutex_unlock(&game_mutex);
     }
+    return NULL;
 }
 
 int main(int argc, char* argv[]){
@@ -155,23 +180,17 @@ int main(int argc, char* argv[]){
     // CONNECTION
     cs_message_t msg_out;
 
-    //Send CONNECT message
+    // Send CONNECT message
     msg_out.type = CONNECT;
     write(sock_fd, &msg_out, sizeof(msg_out));
-
-    // int key = -1;
-    // char my_c = '\0';
 
     ///////////////////////////////////////////////
     // MAIN
     receiving_thread(&sock_fd);
 
-    // msg_out.type = DISCONNECT;
-    // write(sock_fd, &msg_out, sizeof(msg_out));
-    
-    // pthread_join(read_key_thread_id, NULL);
-
+    pthread_join(read_key_thread_id, NULL);
     close(sock_fd);
     endwin();
-    exit(0);
+
+    return 0;
 }

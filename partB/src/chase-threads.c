@@ -12,7 +12,9 @@ void new_player_thread(game_threads_t* game_threads, void* routine(void*), void*
 
     new->next = game_threads->player_threads;
     new->active = 1;
+    new->sock_fd = *(int*)arg;
     game_threads->player_threads = new;
+
     pthread_create(&new->thread, NULL, routine, arg);
 }
 
@@ -21,7 +23,7 @@ void clear_dead_threads(game_threads_t* game_threads){
     thread_list_t** current = &game_threads->player_threads;
     thread_list_t* delete;
 
-    while(*current && current != NULL){
+    while(*current != NULL){
         if((*current)->active == 0){
             delete = *current;
             *current = delete->next;
@@ -32,4 +34,20 @@ void clear_dead_threads(game_threads_t* game_threads){
         }
         current = &(*current)->next;
     }
+}
+
+void kill_thread_by_socket(game_threads_t* game_threads, int sock_fd){
+    thread_list_t** current = &game_threads->player_threads;
+    thread_list_t* delete;
+
+    while(*current && (*current)->sock_fd != sock_fd){
+        current = &(*current)->next;
+    }
+    if(current == NULL) return; // Node not found
+
+    pthread_cancel((*current)->thread);
+
+    delete = *current;
+    *current = delete->next;
+    free(delete);
 }

@@ -6,6 +6,8 @@
 typedef struct thread_list{
     pthread_t thread;
     int active;
+    int sock_fd;
+
     struct thread_list* next;
 }thread_list_t;
 
@@ -22,6 +24,7 @@ void init_threads(game_threads_t* game_threads);
 
 void new_player_thread(game_threads_t* game_threads, void* routine(void*), void* arg);
 void clear_dead_threads(game_threads_t* game_threads);
+void kill_thread_by_socket(game_threads_t* game_threads, int sock_fd);
 
 
 #endif

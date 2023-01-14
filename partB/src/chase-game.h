@@ -13,6 +13,8 @@
 #define BOT_TIME_INTERVAL 0.1
 #define PRIZE_TIME_INTERVAL 3
 
+#define CONTINUE_GAME_TIME 10*1e6
+
 typedef struct server_client_message sc_message_t;
 
 
@@ -51,10 +53,10 @@ void init_players(game_t* game);
 player_node_t* create_player(game_t *game, int sock_fd);
 void insert_player(game_t *game, int c, int x, int y, int health);
 void remove_player(game_t* game, player_node_t* player);
+player_node_t** search_player_by_char(game_t* game, char c);
 void remove_player_by_char(game_t* game, char c);
-
 void update_player(game_t *game, char c, int new_health, int new_x, int new_y);
-// int find_player_slot(game_t* game);
+void respawn_player(player_node_t* player_node);
 
 void init_bots(game_t* game, int n_bots);
 void insert_bot(game_t* game, int x, int y);

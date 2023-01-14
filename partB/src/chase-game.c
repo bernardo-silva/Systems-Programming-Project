@@ -20,7 +20,10 @@ player_node_t* create_player(game_t *game, int sock_fd){
     //Insert player at the beggining of the list
     if(game->n_players >= MAX_PLAYERS) return NULL;
 
-    char player_char = 'A' + game->n_players;
+    char player_char = 'A';
+    while(*search_player_by_char(game, player_char) != NULL){
+        player_char++;
+    }
     game->n_players++;
 
     player_t new_player = {player_char, MAX_HEALTH, 
@@ -76,20 +79,34 @@ void remove_player(game_t *game, player_node_t* player){
 
     game->n_players--;
 }
-void remove_player_by_char(game_t *game, char c){
+
+player_node_t** search_player_by_char(game_t *game, char c){
     player_node_t** current = &game->players;
-    player_node_t* delete;
 
     while(*current && (*current)->player.c != c){
         current = &(*current)->next;
     }
-    if(current == NULL) return; // Node not found
 
-    delete = *current;
-    *current = delete->next;
+    return current;
+}
+
+void remove_player_by_char(game_t *game, char c){
+    player_node_t** player = search_player_by_char(game, c);
+    player_node_t* delete;
+
+    if(*player == NULL) return;
+
+    delete = *player;
+    *player = delete->next;
     free(delete);
 
     game->n_players--;
+}
+
+void respawn_player(player_node_t* player_node){
+    player_node->player.x = WINDOW_SIZE/2;
+    player_node->player.y = WINDOW_SIZE/2;
+    player_node->player.health = MAX_HEALTH;
 }
 
 void init_bots(game_t* game, int n_bots){
@@ -250,11 +267,11 @@ int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_ou
     player_node_t* current;
     for(current = game->players; current != NULL; current = current->next){
         if(current->player.x == new_x && current->player.y == new_y){
-            //TODO
-            if (--(current->player.health) <= 0)
-                remove_player(game, current);
+            if(current->player.health){ //Other player is alive
+                current->player.health--;
+                p->health = MIN(p->health+1, MAX_HEALTH);
+            }
 
-            p->health = MIN(p->health+1, MAX_HEALTH);
             msg_out_other->update_type = UPDATE;
             msg_out_other->entity_type = PLAYER;
 
@@ -313,8 +330,10 @@ int move_bot(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_o
     for(current = game->players; current != NULL; current = current->next){
         if(current->player.x == new_x && current->player.y == new_y){
             //TODO
-            if (--(current->player.health) <= 0)
-                remove_player(game, current);
+            // if (--(current->player.health) <= 0)
+            //     remove_player(game, current);
+            if(current->player.health) //Other player is alive
+                current->player.health--;
 
             msg_out_other->type = FIELD_STATUS;
             msg_out_other->update_type = UPDATE;
