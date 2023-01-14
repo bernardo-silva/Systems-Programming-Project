@@ -28,7 +28,7 @@ void on_field_status(sc_message_t* msg){
         if(msg->entity_type == PLAYER)
             update_player(&game, msg->c, msg->health, msg->new_x, msg->new_y);
         else if(msg->entity_type == BOT)
-            change_bot_position(&game, msg->old_x, msg->old_y, msg->new_x, msg->new_y);
+            update_bot(&game, msg->old_x, msg->old_y, msg->new_x, msg->new_y);
     }
 
     else if(msg->update_type == REMOVE){
@@ -85,47 +85,37 @@ void* receiving_thread(void* arg){
         if(N_bytes_read < 0){
             break;
         }
-        // usleep(16666);
-        // mvwprintw(message_win, 1,1,"Tick: %3d", counter++);
-        // wrefresh(message_win);
 
-        if(N_bytes_read == sizeof(msg_in)){ // If there is a valid message
-            pthread_mutex_lock(&game_mutex);
-            switch (msg_in.type){
-                case BALL_INFORMATION:
-                    my_c = msg_in.c;
-                    // Start reading keys
-                    pthread_create(&read_key_thread_id, NULL, &read_key_thread, &sock_fd);
-                    break;
-                case FIELD_STATUS:
-                    on_field_status(&msg_in);
-                    // memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
-
-                    // update view
-                    // clear_windows(main_win, message_win);
-                    // redraw_screen(main_win, message_win, &game);
-
-                    break;
-                // case HEALTH_0:
-                //     // memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
-                //
-                //     // death screen
-                //     // clear_windows(main_win, message_win);
-                //     draw_board(main_win, &game);
-                //     mvwprintw(message_win, 1,1,"You have perished");
-                //     mvwprintw(message_win, 2,1,"Press 'q' to quit");
-                //     show_players_health(message_win, game.players, 3);
-                //     wrefresh(main_win);
-                //     wrefresh(message_win);
-                //
-                //     wgetch(main_win);
-                //     // disconnect = true;
-                //     break;
-                default:
-                    perror("Error: unknown message type received");
-                    exit(-1);
-            }
-            pthread_mutex_unlock(&game_mutex);
+        if(N_bytes_read != sizeof(msg_in)) continue; // If there is a valid message
+        pthread_mutex_lock(&game_mutex);
+        switch (msg_in.type){
+            case BALL_INFORMATION:
+                my_c = msg_in.c;
+                // Start reading keys
+                pthread_create(&read_key_thread_id, NULL, &read_key_thread, &sock_fd);
+                break;
+            case FIELD_STATUS:
+                on_field_status(&msg_in);
+                break;
+            // case HEALTH_0:
+            //     // memcpy(&game, &(msg_in.game), sizeof(msg_in.game));
+            //
+            //     // death screen
+            //     // clear_windows(main_win, message_win);
+            //     draw_board(main_win, &game);
+            //     mvwprintw(message_win, 1,1,"You have perished");
+            //     mvwprintw(message_win, 2,1,"Press 'q' to quit");
+            //     show_players_health(message_win, game.players, 3);
+            //     wrefresh(main_win);
+            //     wrefresh(message_win);
+            //
+            //     wgetch(main_win);
+            //     // disconnect = true;
+            //     break;
+            default:
+                perror("Error: unknown message type received");
+                exit(-1);
+        pthread_mutex_unlock(&game_mutex);
         }
     }
 }

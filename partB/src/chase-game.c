@@ -23,22 +23,22 @@ player_node_t* create_player(game_t *game, int sock_fd){
     char player_char = 'A' + game->n_players;
     game->n_players++;
 
-    player_t new_player = {WINDOW_SIZE / 2, WINDOW_SIZE / 2, 
-                            player_char, MAX_HEALTH, sock_fd};
+    player_t new_player = {player_char, MAX_HEALTH, 
+                            WINDOW_SIZE / 2, WINDOW_SIZE / 2, sock_fd};
 
-    player_node_t *new_player_element = (player_node_t*) malloc(sizeof(player_node_t));
+    player_node_t *new_player_node = (player_node_t*) malloc(sizeof(player_node_t));
 
-    new_player_element->player = new_player;
-    new_player_element->next = game->players; 
+    new_player_node->player = new_player;
+    new_player_node->next   = game->players; 
 
-    game->players = new_player_element;
+    game->players = new_player_node;
 
-    return new_player_element;
+    return new_player_node;
 }
 
 void insert_player(game_t *game, int c, int x, int y, int health){
     //Insert player at the beggining of the list
-    player_t new_player = {x, y, c, health, -1};
+    player_t new_player = {c, health, x, y, -1};
 
     player_node_t *new_player_element = (player_node_t*) malloc(sizeof(player_node_t));
 
@@ -125,7 +125,7 @@ void insert_bot(game_t* game, int x, int y){
     }
 }
 
-void change_bot_position(game_t* game, int old_x, int old_y, int new_x, int new_y){
+void update_bot(game_t* game, int old_x, int old_y, int new_x, int new_y){
     for(int i=0; i<game->n_bots; i++){
         if(game->bots[i].x == old_x && game->bots[i].y == old_y){
             game->bots[i].x = new_x;
@@ -239,6 +239,7 @@ int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_ou
     //Returns 1 if player moved and/or health changed, 0 otherwise
     //If another entity was affected, changes msg_out_other accordingly
     msg_out_other->entity_type = NONE;
+    msg_out_other->type = FIELD_STATUS;
 
     int new_x = p->x;
     int new_y = p->y;
@@ -278,14 +279,15 @@ int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_ou
 
             p->health = MIN(p->health+prizes[i].value, MAX_HEALTH);
 
-            prizes[i].value = 0;
-            game->n_prizes--;
-
             msg_out_other->update_type = REMOVE;
             msg_out_other->entity_type = PRIZE;
 
             msg_out_other->old_x = prizes[i].x;
             msg_out_other->old_y = prizes[i].y;
+            msg_out_other->health = prizes[i].value;
+
+            prizes[i].value = 0;
+            game->n_prizes--;
 
             break; 
         }
@@ -314,6 +316,7 @@ int move_bot(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_o
             if (--(current->player.health) <= 0)
                 remove_player(game, current);
 
+            msg_out_other->type = FIELD_STATUS;
             msg_out_other->update_type = UPDATE;
             msg_out_other->entity_type = PLAYER;
 

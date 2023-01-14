@@ -10,7 +10,7 @@
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10
 #define INITIAL_PRIZES 5
-#define BOT_TIME_INTERVAL 0.2
+#define BOT_TIME_INTERVAL 0.1
 #define PRIZE_TIME_INTERVAL 3
 
 typedef struct server_client_message sc_message_t;
@@ -58,7 +58,7 @@ void update_player(game_t *game, char c, int new_health, int new_x, int new_y);
 
 void init_bots(game_t* game, int n_bots);
 void insert_bot(game_t* game, int x, int y);
-void change_bot_position(game_t* game, int old_x, int old_y, int new_x, int new_y);
+void update_bot(game_t* game, int old_x, int old_y, int new_x, int new_y);
 
 void init_prizes(game_t * game, int n_prizes);
 int place_new_prize(game_t * game);
