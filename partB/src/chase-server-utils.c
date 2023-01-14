@@ -41,43 +41,26 @@ player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
 void on_move_ball(player_node_t *player_node, cs_message_t *msg_in){
     sc_message_t msg_out_self, msg_out_other;
 
-    // Isto pode acontecer?
-    // if(player_node->player.health <= 0)
-        // TODO
-        // msg_out_self.type = HEALTH_0;
-    // else{
-        //Check if self(player) changed (position and/or health)
-        if(move_player(&game, &player_node->player, msg_in->direction, &msg_out_other)){
-            msg_out_self.type = FIELD_STATUS;
-            msg_out_self.update_type = UPDATE;
-            msg_out_self.entity_type = PLAYER;
+    if(move_player(&game, &player_node->player, msg_in->direction, &msg_out_other)){
+        msg_out_self.type = FIELD_STATUS;
+        msg_out_self.update_type = UPDATE;
+        msg_out_self.entity_type = PLAYER;
 
-            msg_out_self.c     = player_node->player.c;
-            msg_out_self.new_x = player_node->player.x;
-            msg_out_self.new_y = player_node->player.y;
-            msg_out_self.health = player_node->player.health;
+        msg_out_self.c     = player_node->player.c;
+        msg_out_self.new_x = player_node->player.x;
+        msg_out_self.new_y = player_node->player.y;
+        msg_out_self.health = player_node->player.health;
 
-            broadcast_message(&msg_out_self, game.players);
-        }
+        broadcast_message(&msg_out_self, game.players);
+    }
 
-        //Check if another entity(player/prize) was altered
-        if(msg_out_other.entity_type != NONE){
-            if(msg_out_other.health == 0){
-                sc_message_t msg_health0;
-                player_node_t* dead_player = *search_player_by_char(&game, msg_out_other.c);
-
-                msg_health0.type = HEALTH_0;
-                pthread_t game_over_thread_id;
-                pthread_create(&game_over_thread_id, NULL, game_over_thread,
-                               (void *)&dead_player->player.c);
-                write(dead_player->player.sock_fd, &msg_health0, sizeof(msg_health0));
-            }
-            broadcast_message(&msg_out_other, game.players);
-        }
-        // mvwprintw(debug_win, 1,1, "B %c %d %d", msg_out.c, msg_out.type, msg_out.update_type);
-        // wrefresh(debug_win);	
-        //Only broadcast if position changed
-    // }
+    //Check if another entity(player/prize) was altered
+    if(msg_out_other.entity_type != NONE){
+        if(msg_out_other.health == 0)
+            on_player_died(msg_out_other.c);
+        
+        broadcast_message(&msg_out_other, game.players);
+    }
 }
 
 void on_disconnect(player_node_t* player_node){
@@ -117,19 +100,35 @@ void* game_over_thread(void* arg){
     char player_char = *(char*) arg;
     player_node_t* player_node = *search_player_by_char(&game, player_char);
 
+    int health;
     pthread_mutex_lock(&game_threads.game_mutex);
-    if(player_node->player.health != 0) return NULL;
+    health = player_node->player.health;
     pthread_mutex_unlock(&game_threads.game_mutex);
+    if (health != 0) return NULL;
 
     usleep(CONTINUE_GAME_TIME);
 
     pthread_mutex_lock(&game_threads.game_mutex);
-    if(player_node->player.health != 0) return NULL; //Player decided to continue
+    health = player_node->player.health;
     pthread_mutex_unlock(&game_threads.game_mutex);
-
+    if (health != 0) return NULL;//Player decided to continue
+    //
+    // kill_thread_by_socket(&game_threads, player_node->player.sock_fd);
     on_disconnect(player_node);
-    kill_thread_by_socket(&game_threads, player_node->player.sock_fd);
+
     return NULL;
+}
+
+void on_player_died(char c){
+    sc_message_t msg_health0;
+    player_node_t* dead_player = *search_player_by_char(&game, c);
+
+    msg_health0.type = HEALTH_0;
+    pthread_t game_over_thread_id;
+    pthread_create(&game_over_thread_id, NULL, game_over_thread,
+                   (void *)&dead_player->player.c);
+
+    write(dead_player->player.sock_fd, &msg_health0, sizeof(msg_health0));
 }
 
 void* client_thread(void* arg){
@@ -162,13 +161,17 @@ void* client_thread(void* arg){
 
             if (player_node == NULL){
                 alive = 0;
+                pthread_mutex_unlock(&game_threads.game_mutex);
                 continue;
             }; //Unable to add player
         }
         else if (msg_in.type == MOVE_BALL){
             on_move_ball(player_node, &msg_in);
         }
-        else continue; //Ignore invalid messages
+        else{
+            continue; //Ignore invalid messages
+            pthread_mutex_unlock(&game_threads.game_mutex);
+        }
         pthread_mutex_unlock(&game_threads.game_mutex);
 
         //Update windows
@@ -203,16 +206,9 @@ void* bot_thread(void* arg){
                 broadcast_message(&msg_out_self, game.players);
             }
             if(msg_out_other.entity_type != NONE){
-                if(msg_out_other.health == 0){
-                    sc_message_t msg_health0;
-                    player_node_t* dead_player = *search_player_by_char(&game, msg_out_other.c);
-
-                    msg_health0.type = HEALTH_0;
-                    pthread_t game_over_thread_id;
-                    pthread_create(&game_over_thread_id, NULL, game_over_thread,
-                                   (void *)&dead_player->player.c);
-                    write(dead_player->player.sock_fd, &msg_health0, sizeof(msg_health0));
-                }
+                if(msg_out_other.health == 0)
+                    on_player_died(msg_out_other.c);
+               
                 broadcast_message(&msg_out_other, game.players);
             }
         }

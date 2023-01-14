@@ -55,6 +55,7 @@ void on_health_0(sc_message_t* msg){
     mvwprintw(message_win, 1,1,"You have perished");
     mvwprintw(message_win, 2,1,"Press 'q' to quit");
     mvwprintw(message_win, 3,1,"Press key to respawn");
+    wrefresh(message_win);
     pthread_mutex_unlock(&window_mutex);
 }
 
@@ -66,6 +67,8 @@ void* read_key_thread(void* arg){
 
     while(key != 27 && key != 'q'){
         key = wgetch(main_win);
+        mvwprintw(debug_win, 1,1,"Pressed %c", key);
+        wrefresh(debug_win);
         if(game_over){
             msg_out.type = CONTINUE_GAME;
             write(sock_fd, &msg_out, sizeof(msg_out));
@@ -88,7 +91,6 @@ void* receiving_thread(void* arg){
     // cs_message_t msg_out;
 
     char my_c = '\0';
-    int counter = 0;
 
     mvwprintw(debug_win, 3,1,"Started thread");
     wrefresh(debug_win);
@@ -101,11 +103,9 @@ void* receiving_thread(void* arg){
     // wrefresh(debug_win);
 
         if(N_bytes_read < 0){
+            pthread_cancel(read_key_thread_id);
             break;
         }
-        // usleep(16666);
-        // mvwprintw(message_win, 1,1,"Tick: %3d", counter++);
-        // wrefresh(message_win);
 
         if(N_bytes_read != sizeof(msg_in)) continue; // If there is a valid message
 
@@ -122,20 +122,6 @@ void* receiving_thread(void* arg){
             case HEALTH_0:
                 on_health_0(&msg_in);
                 break;
-
-            //
-            //     // death screen
-            //     // clear_windows(main_win, message_win);
-            //     draw_board(main_win, &game);
-            //     mvwprintw(message_win, 1,1,"You have perished");
-            //     mvwprintw(message_win, 2,1,"Press 'q' to quit");
-            //     show_players_health(message_win, game.players, 3);
-            //     wrefresh(main_win);
-            //     wrefresh(message_win);
-            //
-            //     wgetch(main_win);
-            //     // disconnect = true;
-            //     break;
             default:
                 perror("Error: unknown message type received");
                 exit(-1);
@@ -170,7 +156,6 @@ int main(int argc, char* argv[]){
     debug_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE+12, 0);
     box(debug_win, 0 , 0);	
     wrefresh(debug_win);
-    // nodelay(main_win, true); // non blocking wgetch()
 
     ///////////////////////////////////////////////
     // GAME
