@@ -174,6 +174,8 @@ void* client_thread(void* arg){
         int err = read(client_sock_fd, &msg_in, sizeof(msg_in));
 
         if(err < 0){
+            mvwprintw(debug_win, 2,1,"Received error");
+            wrefresh(debug_win);
             on_disconnect(player_node);
             alive = 0;
         }
