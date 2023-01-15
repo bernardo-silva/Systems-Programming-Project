@@ -94,13 +94,13 @@ void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game, int game
 
 direction_t key2dir(int key){
     switch (key){
-        case KEY_UP:
+        case KEY_UP: case 'w':
             return UP;
-        case KEY_DOWN:
+        case KEY_DOWN: case 's':
             return DOWN;
-        case KEY_LEFT:
+        case KEY_LEFT: case 'a':
             return LEFT;
-        case KEY_RIGHT:
+        case KEY_RIGHT: case 'd':
             return RIGHT;
 
         default:
