@@ -14,7 +14,6 @@ WINDOW *message_win, *main_win;
 
 game_threads_t game_threads;
 pthread_t read_key_thread_id;
-pthread_mutex_t game_mutex, window_mutex;
 char my_c = '\0';
 int alive = true;
 int game_over = false;
@@ -72,7 +71,7 @@ void on_field_status(sc_message_t* msg){
 
     mvwprintw(message_win, 1,1,"You are %c", my_c);
     wrefresh(message_win);
-    pthread_mutex_unlock(&window_mutex);
+    pthread_mutex_unlock(&game_threads.window_mutex);
 }
 
 void on_health_0(sc_message_t* msg){

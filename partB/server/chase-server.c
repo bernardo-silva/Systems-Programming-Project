@@ -22,9 +22,6 @@ player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     msg_out.update_type = NEW;
     msg_out.entity_type = PLAYER;
 
-    mvwprintw(debug_win, 1,1,"Created player");
-    wrefresh(debug_win);
-
     read_lock(&game_threads, true, false, false);
     msg_out.c = player_node->player.c;
     msg_out.health = player_node->player.health;
@@ -44,8 +41,6 @@ player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     msg_out.type = BALL_INFORMATION;
     write(sock_fd, &msg_out, sizeof(msg_out));
 
-    mvwprintw(debug_win, 1,1,"Returning connect");
-    wrefresh(debug_win);
     return player_node;
 }
 
@@ -89,6 +84,9 @@ void on_disconnect(player_node_t* player_node){
     msg_out.type = FIELD_STATUS;
     msg_out.update_type = REMOVE;
     msg_out.entity_type = PLAYER;
+
+    mvwprintw(debug_win, 1,1,"On disconnect");
+    wrefresh(debug_win);
 
     write_lock(&game_threads, true, false, false);
     msg_out.c = player_node->player.c;
