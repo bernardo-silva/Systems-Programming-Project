@@ -14,7 +14,8 @@ WINDOW *message_win, *main_win;
 
 game_threads_t game_threads;
 pthread_t read_key_thread_id;
-
+pthread_mutex_t game_mutex, window_mutex;
+char my_c = '\0';
 int alive = true;
 int game_over = false;
 extern time_t death_time;
@@ -68,7 +69,10 @@ void on_field_status(sc_message_t* msg){
     read_lock(&game_threads, true, true, true);
     redraw_screen(main_win, message_win, &game, game_over);
     unlock(&game_threads, true, true, true);
-    pthread_mutex_unlock(&game_threads.window_mutex);
+
+    mvwprintw(message_win, 1,1,"You are %c", my_c);
+    wrefresh(message_win);
+    pthread_mutex_unlock(&window_mutex);
 }
 
 void on_health_0(sc_message_t* msg){
@@ -110,7 +114,7 @@ void* receiving_thread(void* arg){
     sc_message_t msg_in;
     // cs_message_t msg_out;
 
-    char my_c = '\0';
+    
 
     // mvwprintw(debug_win, 3,1,"Started thread");
     // wrefresh(debug_win);

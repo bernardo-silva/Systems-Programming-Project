@@ -5,7 +5,7 @@
 #define MIN(a,b) ((a>b)?b:a)
 
 #define WINDOW_SIZE 20
-#define MAX_PLAYERS 10
+#define MAX_PLAYERS 26 // Upper case letters only
 #define MAX_BOTS 10
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10

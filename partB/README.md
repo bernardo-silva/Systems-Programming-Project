@@ -7,9 +7,9 @@
 - [X] Criar uma thread por client
 - [X] Fazer update do field para todos os clients
 - [X] Esperar 10s para ver se o client quer continuar a jogar
-- [ ] Melhorar mensagens no cliente
+- [X] Melhorar mensagens no cliente
 - [ ] Melhorar mutexes
 - [ ] Testar com o Sigma
-- [ ] Meter client a sair após 10 segundos
-- [ ] Bug no spawn: se houver mais que um player lá, só um leva dano (o último a entrar)
+- [~] Meter client a sair após 10 segundos
+- [~] Bug no spawn: se houver mais que um player lá, só um leva dano (o último a entrar)
 - [ ] Report
