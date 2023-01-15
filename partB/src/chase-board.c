@@ -1,16 +1,12 @@
 #include "chase-board.h"
 #include "chase-game.h"
-#include <locale.h>
 #include <time.h>
 
 time_t death_time;
 
 void init_windows(WINDOW** main_win, WINDOW** message_win){
-    setlocale(LC_CTYPE, "");
-    // main window
     initscr();              /* Start curses mode */
     cbreak();               /* Line buffering disabled */
-    // keypad(stdscr, TRUE);   /* We get F1, F2 etc... */
     noecho();               /* Don't echo() while we do getch */
     curs_set(0);
     start_color();
@@ -86,7 +82,6 @@ void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game, int game
         mvwprintw(main_win, 5,1," respawn");
     }
     else draw_board(main_win, game);
-    // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
     show_players_health(message_win, game->players, 2);
     wrefresh(main_win);
     wrefresh(message_win);	

@@ -12,7 +12,6 @@ int main (int argc, char *argv[]){
     int port = atoi(argv[2]);
 
     srand(time(NULL));
-    // signal(SIGINT, kill_server);
 
     ///////////////////////////////////////////////
     // SOCKET
@@ -31,11 +30,8 @@ int main (int argc, char *argv[]){
 
     ///////////////////////////////////////////////
     // WINDOW CREATION
-    extern WINDOW *message_win, *main_win, *debug_win;
+    extern WINDOW *message_win, *main_win;
     init_windows(&main_win, &message_win);
-    debug_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE+12, 0);
-    box(debug_win, 0 , 0);	
-    wrefresh(debug_win);
 
     ///////////////////////////////////////////////
     // GAME
@@ -58,15 +54,11 @@ int main (int argc, char *argv[]){
             continue;
         }
 
-        mvwprintw(message_win, 4,1, "Accepted %s", inet_ntoa(client_addr.sin_addr));
-        wrefresh(message_win);	
-
-        clear_dead_threads(&game_threads);
-        new_player_thread(&game_threads, client_thread, (void*) &client_sock_fd);
+        new_player_thread(&game_threads, client_thread, NULL);
     }
-    printf("Killed server\n");
 
     endwin();
     close(sock_fd);
+    printf("Killed server\n");
     exit(0);
 }

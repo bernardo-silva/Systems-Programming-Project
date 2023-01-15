@@ -14,7 +14,6 @@ void init_socket(int* fd, struct sockaddr_in* addr, char* server_addr, int port,
     addr->sin_port = htons(port);
 
     inet_aton(server_addr, &addr->sin_addr);
-    // addr->sin_addr.s_addr = INADDR_ANY;
 
     // Do not bind sock unless it is the server
     if (is_client) return;

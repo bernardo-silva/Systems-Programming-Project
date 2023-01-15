@@ -3,10 +3,8 @@
 #include <stdlib.h>
 
 game_t game;
-WINDOW *message_win, *main_win, *debug_win;
+WINDOW *message_win, *main_win;
 game_threads_t game_threads;
-
-volatile sig_atomic_t server_alive;
 
 player_node_t* on_connect(cs_message_t *msg_in, int sock_fd){
     // Player connecting
@@ -89,10 +87,8 @@ void on_disconnect(player_node_t* player_node){
     write_lock(&game_threads, true, false, false);
     msg_out.c = player_node->player.c;
 
-    mvwprintw(debug_win, 1,1,"On disconnect %c", msg_out.c);
-    wrefresh(debug_win);
-
-    shutdown(player_node->player.sock_fd, SHUT_RDWR);
+    // shutdown(player_node->player.sock_fd, SHUT_RDWR);
+    close(player_node->player.sock_fd);
     remove_player(&game, player_node);
     unlock(&game_threads, true, false, false);
 
@@ -141,7 +137,6 @@ void* game_over_thread(void* arg){
 
     if (health != 0) return NULL;//Player decided to continue
     
-    kill_thread_by_socket(&game_threads, player_node->player.sock_fd);
     on_disconnect(player_node);
 
     return NULL;
@@ -174,11 +169,7 @@ void* client_thread(void* arg){
         //Receive message from client
         int err = read(client_sock_fd, &msg_in, sizeof(msg_in));
 
-        mvwprintw(debug_win, 3,1,"Received error %d", err);
-        wrefresh(debug_win);
         if(err <= 0){
-            mvwprintw(debug_win, 2,1,"Received error %d", err);
-            wrefresh(debug_win);
             on_disconnect(player_node);
             alive = 0;
         }
@@ -258,7 +249,9 @@ void* bot_thread(void* arg){
         }
 
         pthread_mutex_lock(&game_threads.window_mutex);
+        read_lock(&game_threads, true, true, true);
         redraw_screen(main_win, message_win, &game, false);
+        unlock(&game_threads, true, true, true);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
