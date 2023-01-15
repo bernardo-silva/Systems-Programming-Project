@@ -211,7 +211,9 @@ void* client_thread(void* arg){
 
         //Update windows
         pthread_mutex_lock(&game_threads.window_mutex);
+        read_lock(&game_threads, true, true, true);
         redraw_screen(main_win, message_win, &game, false);
+        unlock(&game_threads, true, true, true);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
@@ -290,7 +292,9 @@ void* prize_thread(void* arg){
         }
 
         pthread_mutex_lock(&game_threads.window_mutex);
+        read_lock(&game_threads, true, true, true);
         redraw_screen(main_win, message_win, &game, false);
+        unlock(&game_threads, true, true, true);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
