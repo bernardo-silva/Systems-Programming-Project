@@ -99,10 +99,10 @@ void* receiving_thread(void* arg){
         // Check for message from the server
         int N_bytes_read = read(sock_fd, &msg_in, sizeof(msg_in));
 
-    //     mvwprintw(debug_win, 2,1,"R %d %d %d", msg_in.type, msg_in.update_type, ++counter);
-    // wrefresh(debug_win);
+         mvwprintw(debug_win, 2,1,"Read %db", N_bytes_read);
+         wrefresh(debug_win);
 
-        if(N_bytes_read < 0){
+        if(N_bytes_read <= 0){
             pthread_cancel(read_key_thread_id);
             break;
         }
