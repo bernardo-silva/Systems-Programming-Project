@@ -10,7 +10,6 @@
 
 game_t game;
 WINDOW *message_win, *main_win;
-// WINDOW *debug_win;
 
 game_threads_t game_threads;
 pthread_t read_key_thread_id;
@@ -111,19 +110,10 @@ void* receiving_thread(void* arg){
     int sock_fd = *(int *) arg;
 
     sc_message_t msg_in;
-    // cs_message_t msg_out;
-
-    
-
-    // mvwprintw(debug_win, 3,1,"Started thread");
-    // wrefresh(debug_win);
 
     while(alive){
         // Check for message from the server
         int N_bytes_read = read(sock_fd, &msg_in, sizeof(msg_in));
-
-         // mvwprintw(debug_win, 2,1,"Read %db", N_bytes_read);
-         // wrefresh(debug_win);
 
         if(N_bytes_read <= 0){
             pthread_cancel(read_key_thread_id);
@@ -175,9 +165,6 @@ int main(int argc, char* argv[]){
     // WINDOW CREATION
     init_windows(&main_win, &message_win);
     nodelay(main_win, true); // non blocking wgetch()
-    // debug_win = newwin(12, WINDOW_SIZE, WINDOW_SIZE+12, 0);
-    // box(debug_win, 0 , 0);	
-    // wrefresh(debug_win);
 
     ///////////////////////////////////////////////
     // GAME
