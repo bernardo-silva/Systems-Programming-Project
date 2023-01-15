@@ -1,6 +1,9 @@
 #include "chase-board.h"
 #include "chase-game.h"
 #include <locale.h>
+#include <time.h>
+
+time_t death_time;
 
 void init_windows(WINDOW** main_win, WINDOW** message_win){
     setlocale(LC_CTYPE, "");
@@ -73,9 +76,16 @@ void clear_windows(WINDOW* main_win, WINDOW* message_win){
     box(message_win, 0 , 0);
 }
 
-void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game){
+void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game, int game_over){
     clear_windows(main_win, message_win);
-    draw_board(main_win, game);
+    if(game_over){ // client-side only
+        mvwprintw(main_win, 1,1,"You have perished");
+        mvwprintw(main_win, 2,1,"Timeout in %2ds", 10 - (int) (time(NULL)-death_time));
+        mvwprintw(main_win, 3,1,"Press 'q' to quit");
+        mvwprintw(main_win, 4,1,"Press 'Enter' to");
+        mvwprintw(main_win, 5,1," respawn");
+    }
+    else draw_board(main_win, game);
     // mvwprintw(message_win, 1,1,"Tick %d", tick_counter++);
     show_players_health(message_win, game->players, 2);
     wrefresh(main_win);
