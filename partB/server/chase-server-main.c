@@ -54,7 +54,8 @@ int main (int argc, char *argv[]){
             continue;
         }
 
-        new_player_thread(&game_threads, client_thread, NULL);
+        // clear_dead_threads(&game_threads);
+        new_player_thread(&game_threads, client_thread, (void*) &client_sock_fd);
     }
 
     endwin();

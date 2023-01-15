@@ -10,13 +10,12 @@
 
 game_t game;
 WINDOW *message_win, *main_win;
-
 game_threads_t game_threads;
+
 pthread_t read_key_thread_id;
-char my_c = '\0';
 int alive = true;
 int game_over = false;
-extern time_t death_time;
+char my_c = '\0';
 
 void on_field_status(sc_message_t* msg){
     if(msg->update_type == NEW){
@@ -74,6 +73,7 @@ void on_field_status(sc_message_t* msg){
 }
 
 void on_health_0(sc_message_t* msg){
+    extern time_t death_time;
     game_over = true;
     death_time = time(NULL);
 }
