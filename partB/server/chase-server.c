@@ -85,11 +85,12 @@ void on_disconnect(player_node_t* player_node){
     msg_out.update_type = REMOVE;
     msg_out.entity_type = PLAYER;
 
-    mvwprintw(debug_win, 1,1,"On disconnect");
-    wrefresh(debug_win);
 
     write_lock(&game_threads, true, false, false);
     msg_out.c = player_node->player.c;
+
+    mvwprintw(debug_win, 1,1,"On disconnect %c", msg_out.c);
+    wrefresh(debug_win);
 
     shutdown(player_node->player.sock_fd, SHUT_RDWR);
     remove_player(&game, player_node);
