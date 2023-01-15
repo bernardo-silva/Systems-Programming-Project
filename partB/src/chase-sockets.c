@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int is_client){
+void init_socket(int* fd, struct sockaddr_in* addr, char* server_addr, int port, int is_client){
     *fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*fd == -1){
         perror("Error creating socket");
@@ -13,7 +13,7 @@ void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int is
     addr->sin_family = AF_INET;
     addr->sin_port = htons(port);
 
-    inet_aton(path, &addr->sin_addr);
+    inet_aton(server_addr, &addr->sin_addr);
     // addr->sin_addr.s_addr = INADDR_ANY;
 
     // Do not bind sock unless it is the server
@@ -31,13 +31,8 @@ void broadcast_message(sc_message_t* msg, player_node_t* players){
     for(current = players; current != NULL; current = current->next){
         write(current->player.sock_fd, msg, sizeof(*msg));
     }
-    // for(int i=0; i<MAX_PLAYERS; i++){
-    //     if(players[i].sock_fd < 0) continue;
-    //
-    //     write(players[i].sock_fd, msg, sizeof(*msg));
-    //     if(++n_sent >= n_players) break;
-    // }
 }
+
 void send_field(game_t *game, int sock_fd){
     sc_message_t msg_out;
     msg_out.type = FIELD_STATUS;

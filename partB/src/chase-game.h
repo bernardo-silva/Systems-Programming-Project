@@ -10,8 +10,8 @@
 #define MAX_PRIZES 10
 #define MAX_HEALTH 10
 #define INITIAL_PRIZES 5
-#define BOT_TIME_INTERVAL 0.1
-#define PRIZE_TIME_INTERVAL 3
+#define BOT_TIME_INTERVAL 3
+#define PRIZE_TIME_INTERVAL 5
 
 #define CONTINUE_GAME_TIME 10*1e6
 
@@ -53,7 +53,10 @@ void init_players(game_t* game);
 player_node_t* create_player(game_t *game, int sock_fd);
 void insert_player(game_t *game, int c, int x, int y, int health);
 void remove_player(game_t* game, player_node_t* player);
+
+// Searches for a player by their character identifier.
 player_node_t** search_player_by_char(game_t* game, char c);
+
 void remove_player_by_char(game_t* game, char c);
 void update_player(game_t *game, char c, int new_health, int new_x, int new_y);
 void respawn_player(player_node_t* player_node);
@@ -63,11 +66,30 @@ void insert_bot(game_t* game, int x, int y);
 void update_bot(game_t* game, int old_x, int old_y, int new_x, int new_y);
 
 void init_prizes(game_t * game, int n_prizes);
-int place_new_prize(game_t * game);
+
+// Creates a new prize and returns its index in the prizes array.
+int create_prize(game_t * game);
+
 void insert_prize(game_t* game, int x, int y, int value);
 void remove_prize(game_t* game, int x, int y, int value);
 
+// Returns 1 if position (x, y) is empty, 0 otherwise.
 int  is_empty(game_t* game, int x, int y);
-int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_other);
+
+/*
+* Attempts to move a player.
+*
+* Returns 1 if player moved and/or health changed, 0 otherwise.
+* If another entity was affected, changes msg_out_other accordingly.
+*/
+int move_player(game_t *game, player_t *p, direction_t dir,
+                sc_message_t *msg_out_other);
+
+/*
+* Attempts to move a bot.
+*
+* Returns 1 if the bot moved, 0 otherwise.
+* If another entity was affected, changes msg_out_other accordingly.
+*/
 int move_bot(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_other);
 #endif

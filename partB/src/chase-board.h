@@ -10,7 +10,6 @@
 
 void init_windows(WINDOW** my_win, WINDOW** message_win);
 
-// void clear_board(WINDOW* win);
 void draw_board(WINDOW* win, game_t* game);
 void clear_windows(WINDOW* main_win, WINDOW* message_win);
 void draw_player(WINDOW *win, player_t *player, int clear_char);

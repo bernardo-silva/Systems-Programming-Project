@@ -17,16 +17,16 @@ typedef struct client_t{
 
 
 typedef enum cs_message_type{
-    CONNECT,    // No information
-    MOVE_BALL,  // Direction
-    CONTINUE_GAME, // No information
+    CONNECT,
+    MOVE_BALL,
+    CONTINUE_GAME,
 } cs_message_type_t;
 
 typedef enum sc_message_type{
     // Client
-    BALL_INFORMATION, // Char, position
-    FIELD_STATUS,  // players[10] bots[10] prizes[10]
-    HEALTH_0  // No info
+    BALL_INFORMATION,
+    FIELD_STATUS,
+    HEALTH_0
 } sc_message_type_t;
 
 typedef enum update_type{
@@ -58,9 +58,17 @@ typedef struct server_client_message{
     int new_x, new_y;
 } sc_message_t;
 
-void init_socket(int* fd, struct sockaddr_in* addr, char* path, int port, int client_flag);
-void init_client(client_t* c, int sockfd, player_t* player);
+/* 
+ * Initializes the internet domain stream sockets and sets the server address
+ * and port. If client_flag is 0, it also binds the socket.
+ */
+void init_socket(int *fd, struct sockaddr_in *addr, char *server_addr, int port,
+                int client_flag);
+
+// Broadcasts a message to all connected clients.
 void broadcast_message(sc_message_t* msg, player_node_t* players);
+
+// Sends multiple messages with the current field status to one client
 void send_field(game_t *game, int sock_fd);
 
 #endif // !CHASE-SOCKET

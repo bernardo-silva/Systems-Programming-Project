@@ -157,10 +157,10 @@ void init_prizes(game_t* game, int n_prizes){
         game->prizes[i].value = 0;
 
     for (int i=0; i<n_prizes; i++)
-        place_new_prize(game);
+        create_prize(game);
 }
 
-int place_new_prize(game_t* game){
+int create_prize(game_t* game){
     int x, y;
     int i;
     if(game->n_prizes >= MAX_PRIZES) return -1;
@@ -253,8 +253,6 @@ int target_position(int* x, int* y, direction_t dir){
 }
 
 int move_player(game_t* game, player_t* p, direction_t dir, sc_message_t* msg_out_other){
-    //Returns 1 if player moved and/or health changed, 0 otherwise
-    //If another entity was affected, changes msg_out_other accordingly
     msg_out_other->entity_type = NONE;
     msg_out_other->type = FIELD_STATUS;
 
