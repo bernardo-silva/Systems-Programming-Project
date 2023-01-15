@@ -80,7 +80,7 @@ void redraw_screen(WINDOW* main_win, WINDOW* message_win, game_t* game, int game
     clear_windows(main_win, message_win);
     if(game_over){ // client-side only
         mvwprintw(main_win, 1,1,"You have perished");
-        mvwprintw(main_win, 2,1,"Timeout in %2ds", 10 - (int) (time(NULL)-death_time));
+        mvwprintw(main_win, 2,1,"Timeout in %2lds", (time_t) 10 - (time(NULL)-death_time));
         mvwprintw(main_win, 3,1,"Press 'q' to quit");
         mvwprintw(main_win, 4,1,"Press 'Enter' to");
         mvwprintw(main_win, 5,1," respawn");
