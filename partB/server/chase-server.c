@@ -175,7 +175,7 @@ void* client_thread(void* arg){
 
         mvwprintw(debug_win, 3,1,"Received error %d", err);
         wrefresh(debug_win);
-        if(err < 0){
+        if(err <= 0){
             mvwprintw(debug_win, 2,1,"Received error %d", err);
             wrefresh(debug_win);
             on_disconnect(player_node);
