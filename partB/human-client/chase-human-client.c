@@ -14,6 +14,7 @@ pthread_t read_key_thread_id;
 pthread_mutex_t game_mutex, window_mutex;
 int alive = true;
 int game_over = false;
+extern time_t death_time;
 
 void on_field_status(sc_message_t* msg){
     if(msg->update_type == NEW){
@@ -40,7 +41,7 @@ void on_field_status(sc_message_t* msg){
     }
 
     pthread_mutex_lock(&window_mutex);
-    redraw_screen(main_win, message_win, &game);
+    redraw_screen(main_win, message_win, &game, game_over);
     pthread_mutex_unlock(&window_mutex);
 }
 
@@ -48,15 +49,16 @@ void on_health_0(sc_message_t* msg){
     game_over = true;
     mvwprintw(debug_win, 1,1,"Received H0");
     wrefresh(debug_win);
+    death_time = time(NULL);
 
-    pthread_mutex_lock(&window_mutex);
-    werase(message_win);
-    box(message_win, 0 , 0);
-    mvwprintw(message_win, 1,1,"You have perished");
-    mvwprintw(message_win, 2,1,"Press 'q' to quit");
-    mvwprintw(message_win, 3,1,"Press key to respawn");
-    wrefresh(message_win);
-    pthread_mutex_unlock(&window_mutex);
+    // pthread_mutex_lock(&window_mutex);
+    // werase(message_win);
+    // box(message_win, 0 , 0);
+    // mvwprintw(message_win, 1,1,"You have perished");
+    // mvwprintw(message_win, 2,1,"Press 'q' to quit");
+    // mvwprintw(message_win, 3,1,"Press key to respawn");
+    // wrefresh(message_win);
+    // pthread_mutex_unlock(&window_mutex);
 }
 
 void* read_key_thread(void* arg){
@@ -69,7 +71,7 @@ void* read_key_thread(void* arg){
         key = wgetch(main_win);
         mvwprintw(debug_win, 1,1,"Pressed %c", key);
         wrefresh(debug_win);
-        if(game_over){
+        if(game_over && key == '\n'){
             msg_out.type = CONTINUE_GAME;
             write(sock_fd, &msg_out, sizeof(msg_out));
             game_over = false;

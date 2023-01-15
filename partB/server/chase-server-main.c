@@ -41,7 +41,7 @@ int main (int argc, char *argv[]){
     // GAME
     extern game_t game;
     new_game(&game, MAX_BOTS, INITIAL_PRIZES);
-    redraw_screen(main_win, message_win, &game);
+    redraw_screen(main_win, message_win, &game, false);
 
     ///////////////////////////////////////////////
     // THREADS

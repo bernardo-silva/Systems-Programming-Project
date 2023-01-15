@@ -208,7 +208,7 @@ void* client_thread(void* arg){
 
         //Update windows
         pthread_mutex_lock(&game_threads.window_mutex);
-        redraw_screen(main_win, message_win, &game);
+        redraw_screen(main_win, message_win, &game, false);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
@@ -253,7 +253,7 @@ void* bot_thread(void* arg){
         }
 
         pthread_mutex_lock(&game_threads.window_mutex);
-        redraw_screen(main_win, message_win, &game);
+        redraw_screen(main_win, message_win, &game, false);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
@@ -287,7 +287,7 @@ void* prize_thread(void* arg){
         }
 
         pthread_mutex_lock(&game_threads.window_mutex);
-        redraw_screen(main_win, message_win, &game);
+        redraw_screen(main_win, message_win, &game, false);
         pthread_mutex_unlock(&game_threads.window_mutex);
     }
     return NULL;
