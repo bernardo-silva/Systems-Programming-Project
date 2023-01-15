@@ -11,4 +11,5 @@
 - [ ] Melhorar mutexes
 - [ ] Testar com o Sigma
 - [ ] Meter client a sair após 10 segundos
+- [ ] Bug no spawn: se houver mais que um player lá, só um leva dano (o último a entrar)
 - [ ] Report
